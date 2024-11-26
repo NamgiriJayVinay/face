@@ -1,6 +1,73 @@
 in builidng java android app : i captures my images and stored it at a path calleed sourcePath and now i wna to get teh embeddings of it // Load the face image adn store embeddings Bitmap faceBitmap = BitmapFactory.decodeFile(sourcePath); Log.w("FaceRecognitionHelper", "Face found at :" + sourcePath+"and faceBitMap is "+faceBitmap); adn log output i s Face found at :/storage/emulated/0/Pictures/TempFaces/FACE_20241126_151116.jpgand faceBitMap is android.graphics.Bitmap@f7c5481.. now write function for // Generate embedding float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
 
 
+99999
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import org.tensorflow.lite.Interpreter;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+public class FaceRecognitionHelper {
+    private static final int MODEL_INPUT_SIZE = 160; // Input size for FaceNet model (e.g., 160x160)
+    private static final int EMBEDDING_SIZE = 128;  // Output size of embeddings (FaceNet model)
+    private Interpreter tfliteInterpreter;
+
+    // Constructor to initialize the TFLite interpreter
+    public FaceRecognitionHelper(Context context) {
+        try {
+            tfliteInterpreter = new Interpreter(Utils.loadModelFile(context, "facenet.tflite"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Generate embeddings for the given face bitmap
+    public float[] generateEmbedding(Bitmap faceBitmap) {
+        // Preprocess the bitmap
+        Bitmap resizedBitmap = preprocessBitmap(faceBitmap);
+
+        // Convert the bitmap to ByteBuffer
+        ByteBuffer inputBuffer = convertBitmapToByteBuffer(resizedBitmap);
+
+        // Prepare the output buffer
+        float[][] embedding = new float[1][EMBEDDING_SIZE];
+
+        // Run inference
+        tfliteInterpreter.run(inputBuffer, embedding);
+
+        return embedding[0];
+    }
+
+    // Preprocess the face bitmap: resize and normalize
+    private Bitmap preprocessBitmap(Bitmap bitmap) {
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, true);
+        return resizedBitmap;
+    }
+
+    // Convert the bitmap to a ByteBuffer for the TFLite model
+    private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4 * MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * 3); // Float size * width * height * channels
+        buffer.order(ByteOrder.nativeOrder());
+        int[] intValues = new int[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE];
+        bitmap.getPixels(intValues, 0, MODEL_INPUT_SIZE, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
+
+        for (int pixel : intValues) {
+            // Extract RGB values, normalize to [-1, 1]
+            float r = ((pixel >> 16) & 0xFF) / 255.0f;
+            float g = ((pixel >> 8) & 0xFF) / 255.0f;
+            float b = (pixel & 0xFF) / 255.0f;
+
+            buffer.putFloat((r - 0.5f) * 2);
+            buffer.putFloat((g - 0.5f) * 2);
+            buffer.putFloat((b - 0.5f) * 2);
+        }
+        return buffer;
+    }
+}
+
+
 888888888888888888888888888888
 package com.android.privacyview.utils;
 
