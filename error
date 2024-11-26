@@ -1,4 +1,7 @@
+in builidng java android app : i captures my images and stored it at a path calleed sourcePath and now i wna to get teh embeddings of it // Load the face image adn store embeddings Bitmap faceBitmap = BitmapFactory.decodeFile(sourcePath); Log.w("FaceRecognitionHelper", "Face found at :" + sourcePath+"and faceBitMap is "+faceBitmap); adn log output i s Face found at :/storage/emulated/0/Pictures/TempFaces/FACE_20241126_151116.jpgand faceBitMap is android.graphics.Bitmap@f7c5481.. now write function for // Generate embedding float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
 
+
+888888888888888888888888888888
 package com.android.privacyview.utils;
 
 import android.content.Context;
