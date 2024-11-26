@@ -8,3 +8,133 @@
                                                                                                     	at android.os.Handler.handleCallback(Handler.java:958)
                                                                                                     	at android.os.Handler.dispatchMessage(Handler.java:99)
                                                                                                     	at android.os.Looper.loopOnce(Looper.java:230)
+
+
+public class FaceRecognitionHelper {
+    private static final String MODEL_FILE = "facenet_model.tflite";
+    private static final int INPUT_SIZE = 160; // The input size the model expects
+    private Context context;
+    private Interpreter interpreter;
+    private Map<String, float[]> faceEmbeddings;
+
+    public FaceRecognitionHelper(Context context) {
+        this.context = context;
+        faceEmbeddings = new HashMap<>();
+        initializeInterpreter();
+    }
+
+    private void initializeInterpreter() {
+        try {
+            Interpreter.Options options = new Interpreter.Options();
+            options.setNumThreads(4); // Adjust based on your needs
+            
+            // Load model from assets
+            ByteBuffer model = loadModelFile();
+            interpreter = new Interpreter(model, options);
+        } catch (IOException e) {
+            Log.e("FaceRecognitionHelper", "Error initializing TFLite interpreter", e);
+        }
+    }
+
+    private ByteBuffer loadModelFile() throws IOException {
+        String modelPath = MODEL_FILE;
+        AssetFileDescriptor fileDescriptor = context.getAssets().openFd(modelPath);
+        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+        FileChannel fileChannel = inputStream.getChannel();
+        long startOffset = fileDescriptor.getStartOffset();
+        long declaredLength = fileDescriptor.getDeclaredLength();
+        
+        ByteBuffer buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+        inputStream.close();
+        return buffer;
+    }
+
+    public float[] generateEmbedding(Bitmap faceBitmap) {
+        if (interpreter == null) {
+            Log.e("FaceRecognitionHelper", "TFLite interpreter is null");
+            return null;
+        }
+
+        // Preprocess the bitmap to match model input requirements
+        Bitmap scaledBitmap = Bitmap.createScaledBitmap(faceBitmap, INPUT_SIZE, INPUT_SIZE, true);
+        
+        // Convert bitmap to float array
+        ByteBuffer imgData = ByteBuffer.allocateDirect(INPUT_SIZE * INPUT_SIZE * 3 * 4); // 4 bytes per float
+        imgData.order(ByteOrder.nativeOrder());
+        
+        int[] pixels = new int[INPUT_SIZE * INPUT_SIZE];
+        scaledBitmap.getPixels(pixels, 0, INPUT_SIZE, 0, 0, INPUT_SIZE, INPUT_SIZE);
+        
+        // Normalize pixel values to [-1, 1]
+        for (int pixel : pixels) {
+            float r = ((pixel >> 16) & 0xFF) / 127.5f - 1;
+            float g = ((pixel >> 8) & 0xFF) / 127.5f - 1;
+            float b = (pixel & 0xFF) / 127.5f - 1;
+            
+            imgData.putFloat(r);
+            imgData.putFloat(g);
+            imgData.putFloat(b);
+        }
+
+        // Output array for the model
+        float[][] embeddings = new float[1][512]; // Adjust size based on your model's output
+        
+        try {
+            // Run inference
+            Object[] inputArray = {imgData.rewind()};
+            Map<Integer, Object> outputMap = new HashMap<>();
+            outputMap.put(0, embeddings);
+            
+            interpreter.runForMultipleInputsOutputs(inputArray, outputMap);
+            
+            return embeddings[0];
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error running model inference", e);
+            return null;
+        } finally {
+            if (scaledBitmap != faceBitmap) {
+                scaledBitmap.recycle();
+            }
+        }
+    }
+
+    public void loadFaceEmbeddings() {
+        // Load stored face embeddings from storage
+        // This is where you would load previously stored face embeddings
+        // For now, we'll just add a sample embedding
+        try {
+            // Load embeddings from shared preferences or file storage
+            SharedPreferences prefs = context.getSharedPreferences("FaceEmbeddings", Context.MODE_PRIVATE);
+            // Implementation depends on how you store your embeddings
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error loading face embeddings", e);
+        }
+    }
+
+    public String recognizeFace(float[] newEmbedding) {
+        if (newEmbedding == null) return "Unknown";
+        
+        String closestMatch = "Unknown";
+        float minDistance = Float.MAX_VALUE;
+        
+        for (Map.Entry<String, float[]> entry : faceEmbeddings.entrySet()) {
+            float distance = calculateDistance(newEmbedding, entry.getValue());
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestMatch = entry.getKey();
+            }
+        }
+        
+        // You might want to set a threshold for recognition
+        return minDistance < 1.0f ? closestMatch : "Unknown";
+    }
+
+    private float calculateDistance(float[] emb1, float[] emb2) {
+        float sum = 0;
+        for (int i = 0; i < emb1.length; i++) {
+            float diff = emb1[i] - emb2[i];
+            sum += diff * diff;
+        }
+        return (float) Math.sqrt(sum);
+    }
+}
