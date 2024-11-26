@@ -522,3 +522,145 @@ Remember to add the required permissions in your AndroidManifest.xml:
 ```
 
 Would you like me to explain any specific import or add any additional ones for particular features?
+
+public class FaceRecognitionActivity extends AppCompatActivity {
+    private PreviewView previewView;
+    private FaceBoxOverlay recognitionOverlay;
+    private ExecutorService cameraExecutor;
+    private FaceDetector faceDetector;
+    private FaceRecognitionHelper faceRecognitionHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_face_recognition);
+
+        previewView = findViewById(R.id.recognition_preview_view);
+        recognitionOverlay = findViewById(R.id.recognition_face_overlay);
+
+        faceRecognitionHelper = new FaceRecognitionHelper(this);
+        faceRecognitionHelper.loadFaceEmbeddings();
+
+        setupCamera();
+    }
+
+    private void setupCamera() {
+        cameraExecutor = Executors.newSingleThreadExecutor();
+
+        FaceDetectorOptions options = new FaceDetectorOptions.Builder()
+                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
+                .build();
+        faceDetector = FaceDetection.getClient(options);
+
+        ProcessCameraProvider.getInstance(this).addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
+                bindCameraUseCases(cameraProvider);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+    private void bindCameraUseCases(ProcessCameraProvider cameraProvider) {
+        Preview preview = new Preview.Builder().build();
+
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                .setTargetResolution(new Size(640, 480))
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build();
+
+        imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
+            @SuppressWarnings("ConstantConditions")
+            Image image = imageProxy.getImage();
+            if (image == null) {
+                imageProxy.close();
+                return;
+            }
+
+            InputImage inputImage = InputImage.fromMediaImage(image, 
+                    imageProxy.getImageInfo().getRotationDegrees());
+
+            faceDetector.process(inputImage)
+                    .addOnSuccessListener(faces -> {
+                        for (Face face : faces) {
+                            Rect bounds = face.getBoundingBox();
+                            // Convert image to bitmap and crop face
+                            Bitmap faceBitmap = cropFaceFromImage(image, bounds);
+                            if (faceBitmap != null) {
+                                // Generate embedding
+                                float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
+                                // Get recognized name
+                                String recognizedName = faceRecognitionHelper.recognizeFace(embedding);
+                                // Update overlay with name
+                                recognitionOverlay.updateFaceBox(bounds, recognizedName);
+                            }
+                        }
+                    })
+                    .addOnCompleteListener(task -> imageProxy.close());
+        });
+
+        CameraSelector cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .build();
+
+        try {
+            cameraProvider.unbindAll();
+            cameraProvider.bindToLifecycle(
+                    this,
+                    cameraSelector,
+                    preview,
+                    imageAnalysis
+            );
+
+            preview.setSurfaceProvider(previewView.getSurfaceProvider());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Bitmap cropFaceFromImage(Image image, Rect bounds) {
+        try {
+            Bitmap fullBitmap = imageToBitmap(image);
+            return Bitmap.createBitmap(fullBitmap, 
+                    bounds.left, bounds.top, 
+                    bounds.width(), bounds.height());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Bitmap imageToBitmap(Image image) {
+        if (image == null) return null;
+
+        Image.Plane[] planes = image.getPlanes();
+        ByteBuffer yBuffer = planes[0].getBuffer();
+        ByteBuffer uBuffer = planes[1].getBuffer();
+        ByteBuffer vBuffer = planes[2].getBuffer();
+
+        int ySize = yBuffer.remaining();
+        int uSize = uBuffer.remaining();
+        int vSize = vBuffer.remaining();
+
+        byte[] nv21 = new byte[ySize + uSize + vSize];
+
+        // U and V are swapped
+        yBuffer.get(nv21, 0, ySize);
+        vBuffer.get(nv21, ySize, vSize);
+        uBuffer.get(nv21, ySize + vSize, uSize);
+
+        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 100, out);
+
+        byte[] imageBytes = out.toByteArray();
+        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cameraExecutor.shutdown();
+    }
+}
