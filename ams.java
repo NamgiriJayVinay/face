@@ -404,3 +404,121 @@ Note: You'll need to:
 5. Add proper error handling and loading indicators
 
 Would you like me to explain any specific part in more detail?
+
+ Here are all the necessary imports for FaceRecognitionActivity.java:
+
+```java
+// Android and AndroidX core imports
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.graphics.Rect;
+import android.media.Image;
+import android.os.Bundle;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+// Camera X imports
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExperimentalGetImage;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+
+// ML Kit imports
+import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceDetection;
+import com.google.mlkit.vision.face.FaceDetector;
+import com.google.mlkit.vision.face.FaceDetectorOptions;
+
+// Your custom imports (adjust package name as needed)
+import com.your.package.helpers.FaceRecognitionHelper;
+import com.your.package.utils.FaceBoxOverlay;
+import com.your.package.R;
+
+// Utility imports
+import com.google.common.util.concurrent.ListenableFuture;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+// Optional imports for additional features
+import android.util.Size;
+import android.util.Log;
+import java.util.ArrayList;
+import android.graphics.ImageFormat;
+import android.graphics.YuvImage;
+import java.io.IOException;
+```
+
+Usage notes for specific imports:
+
+1. Camera-related imports:
+```java
+androidx.camera.core.*  // For CameraX functionality
+androidx.camera.lifecycle.ProcessCameraProvider  // For camera lifecycle management
+androidx.camera.view.PreviewView  // For camera preview
+```
+
+2. ML Kit imports:
+```java
+com.google.mlkit.vision.*  // For face detection
+```
+
+3. Custom imports:
+```java
+// Adjust these according to your package structure
+com.your.package.helpers.FaceRecognitionHelper  // Your face recognition helper class
+com.your.package.utils.FaceBoxOverlay  // Your custom view for drawing face boxes
+```
+
+4. Utility imports:
+```java
+java.util.concurrent.*  // For threading and executors
+java.nio.ByteBuffer  // For image processing
+```
+
+Make sure to:
+1. Replace `com.your.package` with your actual package name
+2. Add any additional imports if you implement extra features
+3. Remove unused imports to keep the code clean
+4. Check that all referenced libraries are included in your build.gradle file
+
+If you're using additional features like saving images or logging, you might need these imports too:
+```java
+import android.os.Environment;
+import android.provider.MediaStore;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+```
+
+For error handling and debugging:
+```java
+import android.util.Log;
+import java.io.IOException;
+import java.lang.Exception;
+```
+
+Remember to add the required permissions in your AndroidManifest.xml:
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-feature android:name="android.hardware.camera" />
+<uses-feature android:name="android.hardware.camera.autofocus" />
+```
+
+Would you like me to explain any specific import or add any additional ones for particular features?
