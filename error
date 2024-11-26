@@ -137,4 +137,152 @@ public class FaceRecognitionHelper {
         }
         return (float) Math.sqrt(sum);
     }
+0000
+public class FaceRecognitionHelper {
+    private static final String MODEL_FILE = "facenet_model.tflite";
+    private static final int INPUT_SIZE = 160;
+    private static final String SHARED_PREFS_NAME = "FaceEmbeddings";
+    private static final String EMBEDDING_PREFIX = "face_embedding_";
+    private static final String NAME_LIST_KEY = "registered_faces";
+    private static final float RECOGNITION_THRESHOLD = 0.8f;
+
+    private Context context;
+    private Interpreter interpreter;
+    private Map<String, float[]> faceEmbeddings;
+    private Gson gson;
+
+    public FaceRecognitionHelper(Context context) {
+        this.context = context;
+        this.faceEmbeddings = new HashMap<>();
+        this.gson = new Gson();
+        initializeInterpreter();
+        loadFaceEmbeddings();
+    }
+
+    public boolean addNewFace(Bitmap faceBitmap, String personName) {
+        try {
+            // Generate embedding for the new face
+            float[] newEmbedding = generateEmbedding(faceBitmap);
+            if (newEmbedding == null) {
+                Log.e("FaceRecognitionHelper", "Failed to generate embedding for new face");
+                return false;
+            }
+
+            // Check if this face is too similar to any existing face
+            for (Map.Entry<String, float[]> entry : faceEmbeddings.entrySet()) {
+                float distance = calculateDistance(newEmbedding, entry.getValue());
+                if (distance < RECOGNITION_THRESHOLD) {
+                    Log.w("FaceRecognitionHelper", "Face too similar to existing face: " + entry.getKey());
+                    return false;
+                }
+            }
+
+            // Add the new embedding to the map
+            faceEmbeddings.put(personName, newEmbedding);
+
+            // Save to persistent storage
+            return saveFaceEmbeddings();
+
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error adding new face", e);
+            return false;
+        }
+    }
+
+    private boolean saveFaceEmbeddings() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            // Save the list of names
+            Set<String> nameSet = new HashSet<>(faceEmbeddings.keySet());
+            editor.putStringSet(NAME_LIST_KEY, nameSet);
+
+            // Save each embedding
+            for (Map.Entry<String, float[]> entry : faceEmbeddings.entrySet()) {
+                String name = entry.getKey();
+                float[] embedding = entry.getValue();
+                String embeddingJson = gson.toJson(embedding);
+                editor.putString(EMBEDDING_PREFIX + name, embeddingJson);
+            }
+
+            return editor.commit();
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error saving face embeddings", e);
+            return false;
+        }
+    }
+
+    public void loadFaceEmbeddings() {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+            Set<String> nameSet = prefs.getStringSet(NAME_LIST_KEY, new HashSet<>());
+
+            faceEmbeddings.clear();
+            for (String name : nameSet) {
+                String embeddingJson = prefs.getString(EMBEDDING_PREFIX + name, null);
+                if (embeddingJson != null) {
+                    float[] embedding = gson.fromJson(embeddingJson, float[].class);
+                    faceEmbeddings.put(name, embedding);
+                }
+            }
+
+            Log.d("FaceRecognitionHelper", "Loaded " + faceEmbeddings.size() + " face embeddings");
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error loading face embeddings", e);
+        }
+    }
+
+    public boolean removeFace(String personName) {
+        try {
+            if (!faceEmbeddings.containsKey(personName)) {
+                return false;
+            }
+
+            faceEmbeddings.remove(personName);
+            
+            SharedPreferences prefs = context.getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            
+            // Remove the embedding
+            editor.remove(EMBEDDING_PREFIX + personName);
+            
+            // Update the name set
+            Set<String> nameSet = new HashSet<>(faceEmbeddings.keySet());
+            editor.putStringSet(NAME_LIST_KEY, nameSet);
+            
+            return editor.commit();
+        } catch (Exception e) {
+            Log.e("FaceRecognitionHelper", "Error removing face", e);
+            return false;
+        }
+    }
+
+    public List<String> getRegisteredFaces() {
+        return new ArrayList<>(faceEmbeddings.keySet());
+    }
+
+    public boolean hasFaceRegistered(String personName) {
+        return faceEmbeddings.containsKey(personName);
+    }
+
+    // ... (keep all previous methods: initializeInterpreter, loadModelFile, generateEmbedding, etc.)
+
+    // Updated recognition method with threshold
+    public String recognizeFace(float[] newEmbedding) {
+        if (newEmbedding == null) return "Unknown";
+        
+        String closestMatch = "Unknown";
+        float minDistance = Float.MAX_VALUE;
+        
+        for (Map.Entry<String, float[]> entry : faceEmbeddings.entrySet()) {
+            float distance = calculateDistance(newEmbedding, entry.getValue());
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestMatch = entry.getKey();
+            }
+        }
+        
+        return minDistance < RECOGNITION_THRESHOLD ? closestMatch : "Unknown";
+    }
 }
