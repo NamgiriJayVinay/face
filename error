@@ -1,13 +1,47 @@
- FATAL EXCEPTION: main
-                                                                                                    Process: com.android.privacyview, PID: 5341
-                                                                                                    java.lang.NullPointerException: Attempt to invoke virtual method 'void org.tensorflow.lite.Interpreter.run(java.lang.Object, java.lang.Object)' on a null object reference
-                                                                                                    	at com.android.privacyview.utils.FaceRecognitionHelper.generateEmbedding(FaceRecognitionHelper.java:64)
-                                                                                                    	at com.android.privacyview.ui.FaceRecognitionActivity.lambda$bindCameraUseCases$1$com-android-privacyview-ui-FaceRecognitionActivity(FaceRecognitionActivity.java:123)
-                                                                                                    	at com.android.privacyview.ui.FaceRecognitionActivity$$ExternalSyntheticLambda0.onSuccess(Unknown Source:6)
-                                                                                                    	at com.google.android.gms.tasks.zzm.run(com.google.android.gms:play-services-tasks@@18.1.0:1)
-                                                                                                    	at android.os.Handler.handleCallback(Handler.java:958)
-                                                                                                    	at android.os.Handler.dispatchMessage(Handler.java:99)
-                                                                                                    	at android.os.Looper.loopOnce(Looper.java:230)
+
+
+
+
+
+
+FATAL EXCEPTION: main
+                                                                                                    Process: com.android.privacyview, PID: 9602
+                                                                                                    java.lang.NullPointerException: Attempt to invoke virtual method 'void android.graphics.Paint.set(android.graphics.Paint)' on a null object reference
+                                                                                                    	at android.graphics.BaseRecordingCanvas.drawText(BaseRecordingCanvas.java:487)
+                                                                                                    	at com.android.privacyview.utils.FaceBoxOverlay.onDraw(FaceBoxOverlay.java:104)
+                                                                                                    	at android.view.View.draw(View.java:25194)
+                                                                                                    	at android.view.View.updateDisplayListIfDirty(View.java:24053)
+                                                                                                    	at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4788)
+                                                                                                    	at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4760)
+                                                                                                    	at android.view.View.updateDisplayListIfDirty(View.java:23999)
+                                                                                                    	at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4788)
+                                                                                                    	at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4760)
+                                                                                                    	at android.view.View.updateDisplayListIfDirty(View.java:23999)
+                                                                                                    	at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4788)
+                                                                                                    	at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4760)
+                                                                                                    	at android.view.View.updateDisplayListIfDirty(View.java:23999)
+                                                                                                    	at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4788)
+                                                                                                    	at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4760)
+                                                                                                    	at android.view.View.updateDisplayListIfDirty(View.java:23999)
+                                                                                                    	at android.view.ViewGroup.recreateChildDisplayList(ViewGroup.java:4788)
+                                                                                                    	at android.view.ViewGroup.dispatchGetDisplayList(ViewGroup.java:4760)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 public class FaceRecognitionHelper {
