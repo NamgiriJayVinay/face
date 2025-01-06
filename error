@@ -22,3 +22,15 @@
     </item>
 
 </layer-list>
+
+
+only 1 
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:startColor="#00000000"  <!-- Fully transparent at the center -->
+        android:endColor="#FF000000"    <!-- Fully opaque black at the edges -->
+        android:gradientRadius="80%"   <!-- Radius for the gradient (adjust as needed) -->
+        android:centerX="0.5"          <!-- Horizontal center -->
+        android:centerY="0.5" />       <!-- Vertical center -->
+</shape>
