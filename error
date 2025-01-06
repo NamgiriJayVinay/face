@@ -66,3 +66,124 @@ sensorManager.registerListener(new SensorEventListener() {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 }, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+
+complete Sensor 
+import android.app.Activity;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.WindowManager;
+import android.widget.Toast;
+
+public class MainActivity extends Activity implements SensorEventListener {
+
+    private SensorManager sensorManager;
+    private Sensor accelerometer, gyroscope;
+    private float[] gravity = new float[3];
+    private float[] rotationMatrix = new float[9];
+    private float[] orientationAngles = new float[3];
+    private WindowManager windowManager;
+    private WindowManager.LayoutParams overlayParams;
+    private boolean overlayAdded = false;
+    private LayoutInflater inflater;
+    private FrameLayout overlayView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_main);
+
+        // Initialize SensorManager and Sensors
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        // Initialize WindowManager
+        windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        overlayView = (FrameLayout) inflater.inflate(R.layout.overlay_layout, null);
+
+        // Configure overlay layout parameters
+        overlayParams = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
+                        WindowManager.LayoutParams.TYPE_PHONE,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                PixelFormat.TRANSLUCENT
+        );
+
+        // Start listening to sensors
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_UI);
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            System.arraycopy(event.values, 0, gravity, 0, event.values.length);
+
+            // Calculate device orientation
+            SensorManager.getRotationMatrix(rotationMatrix, null, gravity, new float[3]);
+            SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+            // Get pitch and roll angles in degrees
+            float pitch = (float) Math.toDegrees(orientationAngles[1]);
+            float roll = (float) Math.toDegrees(orientationAngles[2]);
+
+            // Threshold angles for overlay
+            if (Math.abs(pitch) > 60 || Math.abs(roll) > 60) {
+                addOverlay();
+            } else {
+                removeOverlay();
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Not used
+    }
+
+    private void addOverlay() {
+        if (!overlayAdded) {
+            try {
+                windowManager.addView(overlayView, overlayParams);
+                overlayAdded = true;
+                Toast.makeText(this, "Overlay Added", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void removeOverlay() {
+        if (overlayAdded) {
+            try {
+                windowManager.removeView(overlayView);
+                overlayAdded = false;
+                Toast.makeText(this, "Overlay Removed", Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Cleanup resources
+        sensorManager.unregisterListener(this);
+        if (overlayAdded) {
+            windowManager.removeView(overlayView);
+        }
+    }
+}
