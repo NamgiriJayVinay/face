@@ -1,27 +1,27 @@
-private boolean isOverlayAdded = false;
+    public void addMaskToScreen() {
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null);
 
-public void handleFaceDetection(String detectedFaceType) {
-    if (detectedFaceType.equals("unknown")) {
-        // If overlay is not already added, add it
-        if (!isOverlayAdded) {
-            addOverlay();
-            isOverlayAdded = true; // Set the flag to true
+        // Define layout parameters
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT
+        );
+
+        // Adjust layout parameters to include status bar and navigation bar
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            }
         }
-    } else if (detectedFaceType.equals("registered")) {
-        // Remove the overlay if a registered user is detected
-        if (isOverlayAdded) {
-            removeOverlay(); // Implement this method to remove the overlay
-            isOverlayAdded = false; // Reset the flag
+
+        // Add the mask layout to the screen
+        try {
+            windowManager.addView(overlayView, params);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
-}
-
-// Method to add overlay (already implemented in your app)
-private void addOverlay() {
-    // Your existing overlay implementation
-}
-
-// Method to remove overlay
-private void removeOverlay() {
-    // Logic to remove the overlay (e.g., remove the View or reset the transparency)
-}
