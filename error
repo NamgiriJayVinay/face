@@ -25,3 +25,41 @@
             e.printStackTrace();
         }
     }
+
+
+
+
+
+kkk
+
+
+public void addMaskToScreen() {
+    WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+    overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null);
+
+    // Define layout parameters
+    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE 
+            | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE 
+            | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN 
+            | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+    );
+
+    // Ensure the overlay includes status bar and navigation bar areas
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+    }
+
+    // Add the overlay to the screen
+    try {
+        windowManager.addView(overlayView, params);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
