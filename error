@@ -1,160 +1,27 @@
-private void generateAndSaveFaceEmbeddings() {
-    // CODEFLOW: Step 1 - Get the name entered by the user.
-    String name = nameEditText.getText().toString().trim();
-    if (name.isEmpty()) {
-        Toast.makeText(this, "Please enter a name", Toast.LENGTH_SHORT).show();
-        return;
-    }
+private boolean isOverlayAdded = false;
 
-    // CODEFLOW: Step 2 - Define paths for face images and embeddings folder.
-    File documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS);
-    File facesFolder = new File(documentsDir, name + "_Faces");
-    File embeddingsFolder = new File(documentsDir, name + "_Embeddings");
-
-    // CODEFLOW: Step 3 - Check if the faces folder exists.
-    if (!facesFolder.exists() || !facesFolder.isDirectory()) {
-        Toast.makeText(this, "Faces folder does not exist!", Toast.LENGTH_SHORT).show();
-        return;
-    }
-
-    // CODEFLOW: Step 4 - Create the embeddings folder if it doesn't exist.
-    if (!embeddingsFolder.exists()) {
-        embeddingsFolder.mkdirs();
-    }
-
-    // CODEFLOW: Step 5 - Load the FaceNet TFLite model.
-    try {
-        Interpreter tflite = new Interpreter(loadModelFile("facenet.tflite"));
-
-        // CODEFLOW: Step 6 - Iterate over all images in the faces folder.
-        File[] faceFiles = facesFolder.listFiles();
-        if (faceFiles == null || faceFiles.length == 0) {
-            Toast.makeText(this, "No captured faces to process!", Toast.LENGTH_SHORT).show();
-            return;
+public void handleFaceDetection(String detectedFaceType) {
+    if (detectedFaceType.equals("unknown")) {
+        // If overlay is not already added, add it
+        if (!isOverlayAdded) {
+            addOverlay();
+            isOverlayAdded = true; // Set the flag to true
         }
-
-        for (File faceFile : faceFiles) {
-            // CODEFLOW: Step 7 - Preprocess the image for FaceNet input.
-            Bitmap faceBitmap = BitmapFactory.decodeFile(faceFile.getAbsolutePath());
-            float[][] preprocessedImage = preprocessImage(faceBitmap, 160, 160); // Resize to 160x160 as required by FaceNet.
-
-            // CODEFLOW: Step 8 - Run inference to get the embeddings.
-            float[][] embeddings = new float[1][128]; // FaceNet typically outputs a 128-dimension vector.
-            tflite.run(preprocessedImage, embeddings);
-
-            // CODEFLOW: Step 9 - Save the embeddings to a file.
-            File embeddingFile = new File(embeddingsFolder, faceFile.getName() + ".txt");
-            try (FileWriter writer = new FileWriter(embeddingFile)) {
-                for (float value : embeddings[0]) {
-                    writer.write(value + "\n");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error saving embeddings for: " + faceFile.getName(), Toast.LENGTH_SHORT).show();
-            }
+    } else if (detectedFaceType.equals("registered")) {
+        // Remove the overlay if a registered user is detected
+        if (isOverlayAdded) {
+            removeOverlay(); // Implement this method to remove the overlay
+            isOverlayAdded = false; // Reset the flag
         }
-
-        // CODEFLOW: Step 10 - Confirm completion.
-        Toast.makeText(this, "Face embeddings saved in " + embeddingsFolder.getName(), Toast.LENGTH_LONG).show();
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        Toast.makeText(this, "Error loading FaceNet model or processing images", Toast.LENGTH_SHORT).show();
     }
 }
 
-// Utility method to load the TFLite model file.
-private MappedByteBuffer loadModelFile(String modelName) throws IOException {
-    // CODEFLOW: Step - Load TFLite model file from assets.
-    AssetFileDescriptor fileDescriptor = getAssets().openFd(modelName);
-    FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
-    FileChannel fileChannel = inputStream.getChannel();
-    long startOffset = fileDescriptor.getStartOffset();
-    long declaredLength = fileDescriptor.getDeclaredLength();
-    return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
+// Method to add overlay (already implemented in your app)
+private void addOverlay() {
+    // Your existing overlay implementation
 }
 
-// Utility method to preprocess the image for FaceNet.
-private float[][] preprocessImage(Bitmap bitmap, int width, int height) {
-    // CODEFLOW: Step - Resize and normalize image for FaceNet input.
-    Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
-    int batchSize = 1; // Single image batch.
-    float[][][] normalizedImage = new float[batchSize][width][height];
-
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int pixel = resizedBitmap.getPixel(x, y);
-            // Normalize RGB values to [-1, 1].
-            normalizedImage[0][y][x] = new float[]{
-                (Color.red(pixel) / 127.5f) - 1.0f,
-                (Color.green(pixel) / 127.5f) - 1.0f,
-                (Color.blue(pixel) / 127.5f) - 1.0f
-            };
-        }
-    }
-    return normalizedImage;
+// Method to remove overlay
+private void removeOverlay() {
+    // Logic to remove the overlay (e.g., remove the View or reset the transparency)
 }
-
-
-
-
-
-000000
-
-private void registerCapturedFaces() {
-        String name = nameEditText.getText().toString().trim();
-        if (name.isEmpty()) {
-            Toast.makeText(this, "Please enter a name", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Create folder in Documents
-        File documentsDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOCUMENTS);
-        File namedFolder = new File(documentsDir, name + "_Faces");
-
-        if (!namedFolder.exists()) {
-            namedFolder.mkdirs();
-        }
-
-        // Move captured faces to the new folder
-        for (String sourcePath : capturedFacePaths) {
-            File sourceFile = new File(sourcePath);
-            File destFile = new File(namedFolder, sourceFile.getName());
-
-            try {
-                FileInputStream in = new FileInputStream(sourceFile);
-                FileOutputStream out = new FileOutputStream(destFile);
-
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
-
-                in.close();
-                out.close();
-
-                // Optional: Delete original file
-                sourceFile.delete();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-       
-        // Clear the list and reset UI
-        capturedFacePaths.clear();
-        Toast.makeText(this, "Faces registered for " + name, Toast.LENGTH_LONG).show();
-
-        // Reset for potential new capture
-
-        //TODO : add another person or done buttons and then take below actions
-        postRegister.setVisibility(View.VISIBLE);
-        registerButton.setVisibility(View.GONE);
-        addAnotherButton.setOnClickListener(v -> {
-            nameEditText.setText("");
-            registerButton.setVisibility(View.VISIBLE);
-            showCameraPreview();
-            postRegister.setVisibility(View.INVISIBLE);
-        });
