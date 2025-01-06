@@ -34,3 +34,35 @@ only 1
         android:centerX="0.5"          <!-- Horizontal center -->
         android:centerY="0.5" />       <!-- Vertical center -->
 </shape>
+
+
+transparent 
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:type="radial"
+        android:startColor="#00000000"  <!-- Transparent center -->
+        android:centerColor="#88000000" <!-- Semi-transparent ring -->
+        android:endColor="#FF000000"    <!-- Fully opaque edges -->
+        android:gradientRadius="60%"
+        android:centerX="0.5"
+        android:centerY="0.5" />
+</shape>
+
+
+
+
+sensor based 
+
+SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+Sensor proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+sensorManager.registerListener(new SensorEventListener() {
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        if (event.values[0] < proximitySensor.getMaximumRange()) {
+            // Trigger privacy mode
+        }
+    }
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+}, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
