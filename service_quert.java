@@ -255,3 +255,80 @@ private void removeMaskToScren() {
                 .start();
     }
 }
+
+
+new chnage 
+@RequiresApi(api = Build.VERSION_CODES.O)
+public void addMaskToScreen() {
+    windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+    overlayView = LayoutInflater.from(this).inflate(R.layout.overlay_layout, null);
+
+    // Define layout parameters
+    WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                    | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.TRANSLUCENT
+    );
+
+    // Ensure the overlay includes status bar and navigation bar areas
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+    }
+
+    // Add the overlay to the screen
+    try {
+        windowManager.addView(overlayView, params);
+
+        // Set pivot to top-left corner
+        overlayView.setPivotX(0);
+        overlayView.setPivotY(0);
+
+        // Apply scaling and alpha animation
+        overlayView.setScaleX(0);
+        overlayView.setScaleY(0);
+        overlayView.setAlpha(0f);
+
+        overlayView.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .alpha(1f)
+                .setDuration(700) // Animation duration in milliseconds
+                .setInterpolator(new AccelerateDecelerateInterpolator()) // Smooth transition
+                .start();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
+
+private void removeMaskToScren() {
+    if (overlayView != null) {
+        // Set pivot back to top-left corner for shrink effect
+        overlayView.setPivotX(0);
+        overlayView.setPivotY(0);
+
+        // Animate scaling and alpha to remove the view
+        overlayView.animate()
+                .scaleX(0)
+                .scaleY(0)
+                .alpha(0f)
+                .setDuration(700) // Match duration with addition animation
+                .setInterpolator(new AccelerateDecelerateInterpolator())
+                .withEndAction(() -> {
+                    // Remove view after animation ends
+                    if (windowManager != null) {
+                        windowManager.removeView(overlayView);
+                        overlayView = null;
+                    }
+                })
+                .start();
+    }
+}
+
