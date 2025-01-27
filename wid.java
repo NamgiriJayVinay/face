@@ -484,3 +484,76 @@ public class MyWidgetProvider extends AppWidgetProvider {
             android:background="@drawable/dot_inactive" />
     </LinearLayout>
 </RelativeLayout>
+
+
+swap 2
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.widget.RemoteViews;
+
+public class MyWidgetProvider extends AppWidgetProvider {
+
+    private static int currentIndex = 0; // Tracks which view is visible
+
+    @Override
+    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+        for (int appWidgetId : appWidgetIds) {
+            updateWidget(context, appWidgetManager, appWidgetId);
+        }
+    }
+
+    private void updateWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
+
+        // Update visibility based on currentIndex
+        if (currentIndex == 0) {
+            views.setViewVisibility(R.id.firstView, View.VISIBLE);
+            views.setViewVisibility(R.id.secondView, View.GONE);
+            views.setImageViewResource(R.id.dot1, R.drawable.dot_active);
+            views.setImageViewResource(R.id.dot2, R.drawable.dot_inactive);
+        } else {
+            views.setViewVisibility(R.id.firstView, View.GONE);
+            views.setViewVisibility(R.id.secondView, View.VISIBLE);
+            views.setImageViewResource(R.id.dot1, R.drawable.dot_inactive);
+            views.setImageViewResource(R.id.dot2, R.drawable.dot_active);
+        }
+
+        // Swipe left action
+        Intent leftIntent = new Intent(context, MyWidgetProvider.class);
+        leftIntent.setAction("SWIPE_LEFT");
+        PendingIntent leftPendingIntent = PendingIntent.getBroadcast(
+                context, 0, leftIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        views.setOnClickPendingIntent(R.id.firstView, leftPendingIntent);
+
+        // Swipe right action
+        Intent rightIntent = new Intent(context, MyWidgetProvider.class);
+        rightIntent.setAction("SWIPE_RIGHT");
+        PendingIntent rightPendingIntent = PendingIntent.getBroadcast(
+                context, 1, rightIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        views.setOnClickPendingIntent(R.id.secondView, rightPendingIntent);
+
+        appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+
+        if ("SWIPE_LEFT".equals(intent.getAction())) {
+            currentIndex = 0; // Show the first view
+        } else if ("SWIPE_RIGHT".equals(intent.getAction())) {
+            currentIndex = 1; // Show the second view
+        }
+
+        // Update all widget instances
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, MyWidgetProvider.class));
+        for (int appWidgetId : appWidgetIds) {
+            updateWidget(context, appWidgetManager, appWidgetId);
+        }
+    }
+}
