@@ -1,571 +1,271 @@
-package com.android.privacyview.ui;
+package com.example.widgets;
 
-import androidx.annotation.OptIn;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.Manifest;
-import android.content.ContentValues;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.YuvImage;
-import android.media.Image;
-import android.os.Build;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.camera.core.*;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-import androidx.cardview.widget.CardView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import com.android.privacyview.R;
-import com.android.privacyview.utils.FaceBoxOverlay;
-
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.util.Size;
+import android.content.Context;
+import android.util.AttributeSet;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import com.google.android.material.button.MaterialButton;
 
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.face.Face;
-import com.google.mlkit.vision.face.FaceDetector;
-import com.google.mlkit.vision.face.FaceDetectorOptions;
-import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+public class SwimmingWidget extends ConstraintLayout {
+    private Context mContext;
+    private CardView mainCard;
+    private TextView titleText, sessionTitle, sessionTime;
+    private MaterialButton qrButton;
+    private ImageButton moreButton;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-
-public class FaceDetection extends AppCompatActivity implements FaceBoxOverlay.FaceDetectionListener {
-    private static final int PERMISSION_REQUEST_CODE = 1001;
-    private static final int MAX_CAPTURES = 6;
-
-    private PreviewView previewView;
-    private FaceBoxOverlay faceBoxOverlay;
-    private ExecutorService cameraExecutor;
-    private FaceDetector faceDetector;
-    private ImageCapture imageCapture;
-    private AtomicInteger captureCount = new AtomicInteger(0);
-    private long lastCaptureTime = 0;
-    private static final long CAPTURE_DELAY_MS = 1000; // 1 second delay between captures
-
-
-    private Bitmap lastProcessedBitmap;
-    private final Object bitmapLock = new Object();
-
-    private static final Size PREVIEW_SIZE = new Size(640, 480);
-
-
-
-    private LinearLayout nameRegistrationLayout;
-    private EditText nameEditText;
-    private Button registerButton,addAnotherButton,doneButton;
-    private TextView capturedFacesCountText;
-
-    private CardView previewContainer;
-
-    private List<String> capturedFacePaths = new ArrayList<>();
-
-    // Add these to your existing variable declarations
-    private CardView captureProgressCardView;
-    private CircularProgressBar circularProgressBar;
-    private TextView progressTextView,positionHints;
-
-    LinearLayout postRegister;
-
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(com.android.privacyview.R.layout.live_face);
-
-        previewView = findViewById(com.android.privacyview.R.id.preview_view);
-        previewContainer = findViewById(com.android.privacyview.R.id.preview_container);
-        faceBoxOverlay = findViewById(com.android.privacyview.R.id.face_box_overlay);
-        faceBoxOverlay.setFaceDetectionListener(this);
-        nameRegistrationLayout = findViewById(com.android.privacyview.R.id.nameRegistrationLayout);
-        nameRegistrationLayout.setVisibility(View.INVISIBLE);
-        nameEditText = findViewById(com.android.privacyview.R.id.nameEditText);
-        positionHints = findViewById(com.android.privacyview.R.id.position_hints);
-        positionHints.setVisibility(View.VISIBLE);
-
-
-
-        registerButton = findViewById(com.android.privacyview.R.id.registerButton);
-
-        postRegister = findViewById(com.android.privacyview.R.id.postRegister);
-
-        addAnotherButton =findViewById(com.android.privacyview.R.id.addAnotherButton);
-        doneButton = findViewById(com.android.privacyview.R.id.doneButton);
-        capturedFacesCountText = findViewById(com.android.privacyview.R.id.capturedFacesCountText);
-
-        // New view initializations
-        circularProgressBar = findViewById(com.android.privacyview.R.id.circularProgressBar);
-        //====params for circualr progress===
-        // or with gradient
-        circularProgressBar.setProgressBarColorStart(Color.GRAY);
-        circularProgressBar.setProgressBarColorEnd(Color.GREEN);
-        circularProgressBar.setProgressBarColorDirection(CircularProgressBar.GradientDirection.TOP_TO_BOTTOM);
-        // Set Width
-        circularProgressBar.setProgressBarWidth(17f); // in DP
-        circularProgressBar.setRoundBorder(true);
-        //==============
-        progressTextView = findViewById(R.id.progressTextView);
-        requestPermissions();
-
-        FaceDetectorOptions options = new FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                .setLandmarkMode(FaceDetectorOptions.LANDMARK_MODE_NONE)
-                .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_NONE)
-                .build();
-
-        faceDetector = com.google.mlkit.vision.face.FaceDetection.getClient(options);
-        cameraExecutor = Executors.newSingleThreadExecutor();
+    public SwimmingWidget(Context context) {
+        super(context);
+        init(context);
     }
 
-    private void requestPermissions() {
-        String[] permissions;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissions = new String[]{
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.READ_MEDIA_IMAGES
-            };
-        } else {
-            permissions = new String[]{
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-            };
-        }
-
-        if (!hasPermissions(permissions)) {
-            ActivityCompat.requestPermissions(this, permissions, PERMISSION_REQUEST_CODE);
-        } else {
-            startCamera();
-        }
-
-
-        registerButton.setOnClickListener(v -> registerCapturedFaces());
+    public SwimmingWidget(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
     }
 
-    private void registerCapturedFaces() {
-        String name = nameEditText.getText().toString().trim();
-        if (name.isEmpty()) {
-            Toast.makeText(this, "Please enter a name", Toast.LENGTH_SHORT).show();
-            return;
+    private void init(Context context) {
+        this.mContext = context;
+        setupMainLayout();
+    }
+
+    private void setupMainLayout() {
+        // Main CardView
+        mainCard = new CardView(mContext);
+        LayoutParams mainParams = new LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        mainParams.setMargins(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16));
+        mainCard.setLayoutParams(mainParams);
+        mainCard.setCardCornerRadius(dpToPx(28));
+        mainCard.setCardBackgroundColor(0xFF4B75F2);
+        mainCard.setCardElevation(0);
+
+        // Main Container
+        ConstraintLayout container = new ConstraintLayout(mContext);
+        container.setLayoutParams(new LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            LayoutParams.WRAP_CONTENT
+        ));
+        container.setPadding(dpToPx(24), dpToPx(24), dpToPx(24), dpToPx(24));
+
+        // Swimming Icon Container
+        CardView iconContainer = new CardView(mContext);
+        iconContainer.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams iconParams = new ConstraintLayout.LayoutParams(
+            dpToPx(40),
+            dpToPx(40)
+        );
+        iconContainer.setLayoutParams(iconParams);
+        iconContainer.setCardCornerRadius(dpToPx(20));
+        iconContainer.setCardBackgroundColor(0xFF6B8DF4);
+
+        // Swimming Icon
+        ImageView swimmingIcon = new ImageView(mContext);
+        CardView.LayoutParams iconImageParams = new CardView.LayoutParams(
+            dpToPx(24),
+            dpToPx(24)
+        );
+        iconImageParams.gravity = android.view.Gravity.CENTER;
+        swimmingIcon.setLayoutParams(iconImageParams);
+        swimmingIcon.setImageDrawable(createSwimmingIcon());
+        iconContainer.addView(swimmingIcon);
+
+        // Title Text
+        titleText = new TextView(mContext);
+        titleText.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams titleParams = new ConstraintLayout.LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        titleParams.startToEnd = iconContainer.getId();
+        titleParams.topToTop = iconContainer.getId();
+        titleParams.bottomToBottom = iconContainer.getId();
+        titleParams.setMarginStart(dpToPx(12));
+        titleText.setLayoutParams(titleParams);
+        titleText.setText("Swimming pool");
+        titleText.setTextColor(0xFFFFFFFF);
+        titleText.setTextSize(18);
+
+        // More Button
+        moreButton = new ImageButton(mContext);
+        moreButton.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams moreParams = new ConstraintLayout.LayoutParams(
+            dpToPx(40),
+            dpToPx(40)
+        );
+        moreParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        moreParams.topToTop = ConstraintLayout.LayoutParams.PARENT_ID;
+        moreButton.setLayoutParams(moreParams);
+        moreButton.setBackground(createCircleDrawable(0xFF6B8DF4));
+        moreButton.setImageDrawable(createMoreIcon());
+
+        // Session Title
+        sessionTitle = new TextView(mContext);
+        sessionTitle.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams sessionTitleParams = new ConstraintLayout.LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        sessionTitleParams.topToBottom = iconContainer.getId();
+        sessionTitleParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        sessionTitleParams.topMargin = dpToPx(24);
+        sessionTitle.setLayoutParams(sessionTitleParams);
+        sessionTitle.setText("Beginners session");
+        sessionTitle.setTextColor(0xFFFFFFFF);
+        sessionTitle.setTextSize(24);
+
+        // Session Time
+        sessionTime = new TextView(mContext);
+        sessionTime.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams timeParams = new ConstraintLayout.LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        timeParams.topToBottom = sessionTitle.getId();
+        timeParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        timeParams.topMargin = dpToPx(8);
+        sessionTime.setLayoutParams(timeParams);
+        sessionTime.setText("10:00 – 10:45");
+        sessionTime.setTextColor(0xFFFFFFFF);
+        sessionTime.setTextSize(24);
+
+        // QR Button
+        qrButton = new MaterialButton(mContext);
+        qrButton.setId(View.generateViewId());
+        ConstraintLayout.LayoutParams qrParams = new ConstraintLayout.LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        qrParams.topToBottom = sessionTime.getId();
+        qrParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        qrParams.topMargin = dpToPx(24);
+        qrButton.setLayoutParams(qrParams);
+        qrButton.setText("Show QR code");
+        qrButton.setTextColor(0xFFFFFFFF);
+        qrButton.setAllCaps(false);
+        qrButton.setBackgroundColor(0xFF6B8DF4);
+        qrButton.setCornerRadius(dpToPx(16));
+        qrButton.setPadding(dpToPx(16), 0, dpToPx(16), 0);
+        qrButton.setIcon(createQRCodeIcon());
+        qrButton.setIconTint(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
+        qrButton.setIconGravity(MaterialButton.ICON_GRAVITY_START);
+
+        // Add Dot Indicators
+        ConstraintLayout dotsContainer = createDotIndicators();
+        ConstraintLayout.LayoutParams dotsParams = new ConstraintLayout.LayoutParams(
+            LayoutParams.WRAP_CONTENT,
+            LayoutParams.WRAP_CONTENT
+        );
+        dotsParams.topToBottom = qrButton.getId();
+        dotsParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID;
+        dotsParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID;
+        dotsParams.topMargin = dpToPx(16);
+        dotsContainer.setLayoutParams(dotsParams);
+
+        // Add all views to container
+        container.addView(iconContainer);
+        container.addView(titleText);
+        container.addView(moreButton);
+        container.addView(sessionTitle);
+        container.addView(sessionTime);
+        container.addView(qrButton);
+        container.addView(dotsContainer);
+
+        // Add container to main card
+        mainCard.addView(container);
+
+        // Add main card to this widget
+        addView(mainCard);
+
+        // Setup click listeners
+        setupClickListeners();
+    }
+
+    private ConstraintLayout createDotIndicators() {
+        ConstraintLayout dotsContainer = new ConstraintLayout(mContext);
+        android.widget.LinearLayout dots = new android.widget.LinearLayout(mContext);
+        dots.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+
+        for (int i = 0; i < 4; i++) {
+            View dot = new View(mContext);
+            android.widget.LinearLayout.LayoutParams dotParams = new android.widget.LinearLayout.LayoutParams(
+                dpToPx(8),
+                dpToPx(8)
+            );
+            dotParams.setMargins(dpToPx(4), dpToPx(4), dpToPx(4), dpToPx(4));
+            dot.setLayoutParams(dotParams);
+            dot.setBackground(createCircleDrawable(i == 0 ? 0xFFFFFFFF : 0xFF6B8DF4));
+            dots.addView(dot);
         }
 
-        // Create folder in Documents
-        File documentsDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DOCUMENTS);
-        File namedFolder = new File(documentsDir, name + "_Faces");
+        dotsContainer.addView(dots);
+        return dotsContainer;
+    }
 
-        if (!namedFolder.exists()) {
-            namedFolder.mkdirs();
-        }
-
-        // Move captured faces to the new folder
-        for (String sourcePath : capturedFacePaths) {
-            File sourceFile = new File(sourcePath);
-            File destFile = new File(namedFolder, sourceFile.getName());
-
-            try {
-                FileInputStream in = new FileInputStream(sourceFile);
-                FileOutputStream out = new FileOutputStream(destFile);
-
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
-
-                in.close();
-                out.close();
-
-                // Optional: Delete original file
-                sourceFile.delete();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Clear the list and reset UI
-        capturedFacePaths.clear();
-        Toast.makeText(this, "Faces registered for " + name, Toast.LENGTH_LONG).show();
-
-        // Reset for potential new capture
-
-        //TODO : add another person or done buttons and then take below actions
-        postRegister.setVisibility(View.VISIBLE);
-        registerButton.setVisibility(View.GONE);
-        addAnotherButton.setOnClickListener(v -> {
-            nameEditText.setText("");
-            registerButton.setVisibility(View.VISIBLE);
-            showCameraPreview();
-            postRegister.setVisibility(View.INVISIBLE);
+    private void setupClickListeners() {
+        qrButton.setOnClickListener(v -> {
+            // Handle QR code button click
         });
 
-        doneButton.setOnClickListener(v->{
-            this.finishAffinity();
+        moreButton.setOnClickListener(v -> {
+            // Handle more options button click
         });
-
-
     }
 
-    private boolean hasPermissions(String[] permissions) {
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission)
-                    != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
+    private android.graphics.drawable.Drawable createCircleDrawable(int color) {
+        android.graphics.drawable.GradientDrawable circle = new android.graphics.drawable.GradientDrawable();
+        circle.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        circle.setColor(color);
+        return circle;
     }
 
-    @Override
-    public void onGoodFaceDetected(Face face, Rect boundingBox) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastCaptureTime >= CAPTURE_DELAY_MS &&
-                captureCount.get() < MAX_CAPTURES && lastProcessedBitmap != null) {
-            synchronized (bitmapLock) {
-                if (lastProcessedBitmap != null) {
-                    String savedImagePath = cropAndSaveFace(lastProcessedBitmap, face, boundingBox);
-                    if (savedImagePath != null) {
-                        capturedFacePaths.add(savedImagePath);
-                        // Update progress
-                        updateCaptureProgress(capturedFacePaths.size());
-                    }
-                }
-            }
-            lastCaptureTime = currentTime;
-        }
-    }
-    private void updateCaptureProgress(int capturedCount) {
-        // Calculate progress percentage
-        int progressPercentage = (capturedCount * 100) / MAX_CAPTURES;
-
-        // Update circular progress bar
-        circularProgressBar.setProgress(progressPercentage);
-
-        // Update progress text
-        progressTextView.setText(String.format("%d%%", progressPercentage));
-
-        // If all faces captured, prepare for registration
-        if (capturedCount >= MAX_CAPTURES) {
-            showNameRegistration();
-        }
+    private android.graphics.drawable.Drawable createSwimmingIcon() {
+        // Create a simple swimming icon using paths
+        android.graphics.drawable.VectorDrawable.VectorDrawableFactory factory = 
+            new android.graphics.drawable.VectorDrawable.VectorDrawableFactory();
+        
+        String pathData = "M22,21c-1.11,0-1.73,-0.37-2.18,-0.64-0.37,-0.22-0.6,-0.36-1.15,-0.36-0.56,0-0.78,0.13-1.15,0.36-0.46,0.27-1.07,0.64-2.18,0.64s-1.73,-0.37-2.18,-0.64c-0.37,-0.22-0.6,-0.36-1.15,-0.36-0.56,0-0.78,0.13-1.15,0.36-0.46,0.27-1.08,0.64-2.19,0.64-1.11,0-1.73,-0.37-2.18,-0.64-0.37,-0.23-0.6,-0.36-1.15,-0.36s-0.78,0.13-1.15,0.36c-0.46,0.27-1.08,0.64-2.19,0.64v-2c0.56,0,0.78,-0.13,1.15,-0.36,0.46,-0.27,1.08,-0.64,2.19,-0.64s1.73,0.37,2.18,0.64c0.37,0.23,0.59,0.36,1.15,0.36,0.56,0,0.78,-0.13,1.15,-0.36,0.46,-0.27,1.08,-0.64,2.19,-0.64,1.11,0,1.73,0.37,2.18,0.64,0.37,0.22,0.6,0.36,1.15,0.36s0.78,-0.13,1.15,-0.36c0.45,-0.27,1.07,-0.64,2.18,-0.64s1.73,0.37,2.18,0.64c0.37,0.23,0.59,0.36,1.15,0.36v2z";
+        
+        return factory.create(24, 24, pathData, 0xFFFFFFFF);
     }
 
-
-    private String cropAndSaveFace(Bitmap originalBitmap, Face face, Rect boundingBox) {
-        try {
-            // Similar to previous implementation, but return the file path
-            // Add padding to the bounding box
-            int padding = Math.min(boundingBox.width(), boundingBox.height()) / 8;
-            Rect paddedBox = new Rect(
-                    boundingBox.left - padding,
-                    boundingBox.top - padding,
-                    boundingBox.right + padding,
-                    boundingBox.bottom + padding
-            );
-
-            // Ensure the padded box is within image bounds
-            paddedBox.left = Math.max(0, paddedBox.left);
-            paddedBox.top = Math.max(0, paddedBox.top);
-            paddedBox.right = Math.min(originalBitmap.getWidth(), paddedBox.right);
-            paddedBox.bottom = Math.min(originalBitmap.getHeight(), paddedBox.bottom);
-
-            // Create the cropped bitmap
-            Bitmap croppedBitmap = Bitmap.createBitmap(
-                    originalBitmap,
-                    paddedBox.left,
-                    paddedBox.top,
-                    paddedBox.width(),
-                    paddedBox.height()
-            );
-
-            // Save the cropped face and return its path
-            return saveFaceImage(croppedBitmap);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    private android.graphics.drawable.Drawable createQRCodeIcon() {
+        // Create a simple QR code icon
+        android.graphics.drawable.VectorDrawable.VectorDrawableFactory factory = 
+            new android.graphics.drawable.VectorDrawable.VectorDrawableFactory();
+        
+        String pathData = "M3,3h6v6H3V3z M21,3v6h-6V3H21z M3,21h6v-6H3V21z M11,21h2v-2h-2V21z M13,13h2v-2h-2V13z M15,21h2v-2h-2V21z M17,13h2v-2h-2V13z M15,17h2v-2h-2V17z M17,19h2v-2h-2V19z";
+        
+        return factory.create(24, 24, pathData, 0xFFFFFFFF);
     }
 
-    private String saveFaceImage(Bitmap faceBitmap) {
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                .format(new Date());
-        String filename = "FACE_" + timestamp + ".jpg";
-
-        // Using External Storage for easier file management
-        File picturesDir = Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES);
-        File tempFacesDir = new File(picturesDir, "TempFaces");
-
-        if (!tempFacesDir.exists()) {
-            tempFacesDir.mkdirs();
-        }
-
-        File imageFile = new File(tempFacesDir, filename);
-
-        try (FileOutputStream out = new FileOutputStream(imageFile)) {
-            faceBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-
-            int count = captureCount.incrementAndGet();
-            runOnUiThread(() -> {
-                capturedFacesCountText.setText("Faces Captured: " + count);
-
-                // When max captures reached, switch to name registration
-                if (count >= MAX_CAPTURES) {
-                    showNameRegistration();
-                }
-            });
-
-            return imageFile.getAbsolutePath();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+    private android.graphics.drawable.Drawable createMoreIcon() {
+        // Create a simple more/options icon (three dots)
+        android.graphics.drawable.VectorDrawable.VectorDrawableFactory factory = 
+            new android.graphics.drawable.VectorDrawable.VectorDrawableFactory();
+        
+        String pathData = "M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2s-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2S13.1,16,12,16z";
+        
+        return factory.create(24, 24, pathData, 0xFFFFFFFF);
     }
 
-    @Override
-    public void onFaceLost() {
-        // Face is no longer detected or not in good position
+    private int dpToPx(int dp) {
+        float density = mContext.getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 
-    private void captureFace(RectF faceBounds) {
-        if (imageCapture == null) return;
-
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-                .format(new Date());
-        String filename = "FACE_" + timestamp + ".jpg";
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, filename);
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + "/FaceCaptures");
-        }
-
-        ImageCapture.OutputFileOptions outputFileOptions =
-                new ImageCapture.OutputFileOptions.Builder(
-                        getContentResolver(),
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        contentValues
-                ).build();
-
-        imageCapture.takePicture(outputFileOptions, cameraExecutor,
-                new ImageCapture.OnImageSavedCallback() {
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults output) {
-                        int count = captureCount.incrementAndGet();
-                        runOnUiThread(() -> {
-                            Toast.makeText(FaceDetection.this,
-                                    "Captured image " + count + " of " + MAX_CAPTURES,
-                                    Toast.LENGTH_SHORT).show();
-
-                            if (count >= MAX_CAPTURES) {
-                                Toast.makeText(FaceDetection.this,
-                                        "All captures completed!",
-                                        Toast.LENGTH_LONG).show();
-
-                                // registration success here
-                            }
-                        });
-                    }
-
-                    @Override
-                    public void onError(@NonNull ImageCaptureException exception) {
-                        runOnUiThread(() -> Toast.makeText(FaceDetection.this,
-                                "Error capturing image: " + exception.getMessage(),
-                                Toast.LENGTH_SHORT).show());
-                    }
-                });
+    // Public methods to update widget content
+    public void setSessionInfo(String title, String time) {
+        sessionTitle.setText(title);
+        sessionTime.setText(time);
     }
 
-    private void startCamera() {
-        ProcessCameraProvider.getInstance(this).addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
-                bindCameraUseCases(cameraProvider);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(this));
+    public void setTitle(String title) {
+        titleText.setText(title);
     }
-
-    private void bindCameraUseCases(ProcessCameraProvider cameraProvider) {
-        Preview preview = new Preview.Builder().build();
-
-        imageCapture = new ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
-                .build();
-
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(640, 480))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
-            try {
-                // Get the image format
-                @OptIn(markerClass = ExperimentalGetImage.class) @SuppressWarnings("ConstantConditions")
-                Image image = imageProxy.getImage();
-                if (image == null) {
-                    imageProxy.close();
-                    return;
-                }
-
-                // Convert Image to Bitmap
-                Bitmap bitmap = imageToBitmap(image);
-
-                // Handle rotation
-                int rotation = imageProxy.getImageInfo().getRotationDegrees();
-                if (rotation != 0) {
-                    Matrix matrix = new Matrix();
-                    matrix.postRotate(rotation);
-                    bitmap = Bitmap.createBitmap(
-                            bitmap,
-                            0,
-                            0,
-                            bitmap.getWidth(),
-                            bitmap.getHeight(),
-                            matrix,
-                            true
-                    );
-                }
-
-                synchronized (bitmapLock) {
-                    lastProcessedBitmap = bitmap;
-                }
-
-                // Create InputImage from Image object directly
-                InputImage inputImage = InputImage.fromMediaImage(image, rotation);
-
-                Bitmap finalBitmap = bitmap;
-                faceDetector.process(inputImage)
-                        .addOnSuccessListener(faces -> {
-                            faceBoxOverlay.setImageSourceInfo(
-                                    finalBitmap.getWidth(),
-                                    finalBitmap.getHeight(),
-                                    CameraSelector.LENS_FACING_FRONT
-                            );
-                            faceBoxOverlay.setFaces(faces);
-                        })
-                        .addOnCompleteListener(task -> imageProxy.close());
-
-            } catch (Exception e) {
-                imageProxy.close();
-                e.printStackTrace();
-            }
-        });
-
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                .build();
-
-        try {
-            cameraProvider.unbindAll();
-            cameraProvider.bindToLifecycle(
-                    this,
-                    cameraSelector,
-                    preview,
-                    imageCapture,
-                    imageAnalysis
-            );
-
-            preview.setSurfaceProvider(previewView.getSurfaceProvider());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void showNameRegistration() {
-        // Hide camera preview
-        previewContainer.setVisibility(View.GONE);
-
-        // Show name registration layout
-        nameRegistrationLayout.setVisibility(View.VISIBLE);
-
-        // Hide capture progress
-        progressTextView.setVisibility(View.GONE);
-
-        positionHints.setVisibility(View.GONE);
-    }
-
-    private void showCameraPreview() {
-
-        // Reset progress
-        circularProgressBar.setProgress(0);
-        progressTextView.setText("0%");
-
-        // Hide name registration layout
-        nameRegistrationLayout.setVisibility(View.GONE);
-
-        // Show camera preview
-        previewContainer.setVisibility(View.VISIBLE);
-
-        progressTextView.setVisibility(View.VISIBLE);
-
-        positionHints.setVisibility(View.VISIBLE);
-
-
-        // Reset capture count
-        captureCount.set(0);
-        capturedFacesCountText.setText("Faces Captured: 0");
-        capturedFacePaths.clear();
-    }
-
-    // Add this helper method to convert Image to Bitmap
-    private Bitmap imageToBitmap(Image image) {
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
-
-        byte[] nv21 = new byte[ySize + uSize + vSize];
-
-        // U and V are swapped
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
-
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 100, out);
-
-        byte[] imageBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-    }
-
-   
 }
