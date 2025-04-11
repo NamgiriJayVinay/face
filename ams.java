@@ -1,6 +1,11 @@
 package com.example.app; // Replace with your actual package name
 
-import static org.junit.Assert.*;
+// Use only one assertion library to avoid ambiguity
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 import org.junit.Before;
 
