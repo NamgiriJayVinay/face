@@ -1,306 +1,360 @@
-package com.example.app; // Replace with your actual package name
 
-// Use only one assertion library to avoid ambiguity
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+@Entity(tableName = TABLE_AI_MINUTE_DATA)
+public class AiMinuteDataEntity {
+    @PrimaryKey(autoGenerate = true)
+    public int id;
 
-import org.junit.Test;
-import org.junit.Before;
+    @ColumnInfo(name = "timestamp")
+    public long timestamp;
 
-/**
- * Test class for AppInfoEntity
- * Contains 7 positive test cases and 3 negative test cases
- */
-public class AppInfoEntityTest {
+    @ColumnInfo(name = "uid")
+    public int uid;
 
-    private static final String VALID_PACKAGE_NAME = "com.example.testapp";
-    private static final int VALID_UID = 10001;
-    private static final String VALID_APP_NAME = "Test App";
-    private static final String VALID_CATEGORY_NAME = "Tools";
-    private static final int VALID_CATEGORY_ID = 5;
-    private static final int VALID_TRUST_LEVEL = 2;
-    private static final String VALID_ADDITIONAL_DATA = "{\"version\":\"1.0.0\",\"size\":\"15MB\"}";
+    @ColumnInfo(name = "package_name")
+    public String packageName;
 
-    /**
-     * POSITIVE TEST CASE 1: Create valid AppInfoEntity with all required fields
-     */
-    @Test
-    public void testCreateValidAppInfoEntity() {
-        // Create entity with all fields
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                VALID_UID,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                VALID_ADDITIONAL_DATA
-        );
+    @ColumnInfo(name = "app_category")
+    public int appCategory;
 
-        // Verify all fields have expected values
-        assertEquals(VALID_PACKAGE_NAME, entity.packageName);
-        assertEquals(VALID_UID, entity.uid);
-        assertEquals(VALID_APP_NAME, entity.appName);
-        assertEquals(VALID_CATEGORY_NAME, entity.appCategoryName);
-        assertEquals(VALID_CATEGORY_ID, entity.appCategoryId);
-        assertEquals(VALID_TRUST_LEVEL, entity.appTrustLevel);
-        assertEquals(VALID_ADDITIONAL_DATA, entity.additionalData);
+    @ColumnInfo(name = "app_trust_level")
+    public int appTrustLevel;
+
+    @ColumnInfo(name = "access_minute")
+    public long accessMinute;
+
+    @ColumnInfo(name = "access_hour")
+    public int accessHour;
+
+    @ColumnInfo(name = "access_date")
+    public int accessDate;
+
+    @ColumnInfo(name = "granted_permissions")
+    public String grantedPermissions;
+
+    @ColumnInfo(name = "requested_permissions")
+    public String requestedPermissions;
+
+    @ColumnInfo(name = "is_foreground")
+    public int isForeground;
+
+    @ColumnInfo(name = "permission_used_camera")
+    public int permissionUsedCamera;
+
+    @ColumnInfo(name = "permission_used_microphone")
+    public int permissionUsedMicrophone;
+
+    @ColumnInfo(name = "permission_used_get_location")
+    public int permissionUsedGetLocation;
+
+    @ColumnInfo(name = "permission_used_coarse_location")
+    public int permissionUsedCoarseLocation;
+
+    @ColumnInfo(name = "permission_used_storage")
+    public int permissionUsedStorage;
+
+    @ColumnInfo(name = "permission_used_read_media_aural")
+    public int permissionUsedReadMediaAural;
+
+    @ColumnInfo(name = "permission_used_read_media_visual")
+    public int permissionUsedReadMediaVisual;
+
+    @ColumnInfo(name = "permission_used_access_videos")
+    public int permissionUsedAccessVideos;
+
+    @ColumnInfo(name = "permission_used_access_photos")
+    public int permissionUsedAccessPhotos;
+
+    @ColumnInfo(name = "permission_used_read_contacts")
+    public int permissionUsedReadContacts;
+
+    @ColumnInfo(name = "permission_used_edit_and_delete_contacts")
+    public int permissionUsedEditAndDeleteContacts;
+
+    @ColumnInfo(name = "permission_used_send_sms")
+    public int permissionUsedSendSMS;
+
+    @ColumnInfo(name = "permission_used_receive_sms")
+    public int permissionUsedReceiveSMS;
+
+    @ColumnInfo(name = "permission_used_read_sms")
+    public int permissionUsedReadSMS;
+
+    @ColumnInfo(name = "permission_used_near_by_devices")
+    public int permissionUsedNearByDevices;
+
+    @ColumnInfo(name = "permission_used_activity_recognition")
+    public int permissionUsedActivityRecognition;
+
+    @ColumnInfo(name = "permission_used_calendar")
+    public int permissionUsedCalendar;
+
+    @ColumnInfo(name = "permission_used_call_logs")
+    public int permissionUsedCallLogs;
+
+    @ColumnInfo(name = "permission_used_phone")
+    public int permissionUsedPhone;
+
+    @ColumnInfo(name = "camera_duration")
+    public long cameraDuration;
+
+    @ColumnInfo(name = "microphone_duration")
+    public long microphoneDuration;
+
+    @ColumnInfo(name = "location_duration")
+    public long locationDuration;
+
+    public AiMinuteDataEntity() {
+        // Empty constructor
     }
 
-    /**
-     * POSITIVE TEST CASE 2: Create valid AppInfoEntity with minimum required fields
-     * Note: packageName appears to be the only @NonNull field
-     */
-    @Test
-    public void testCreateWithMinimumRequiredFields() {
-        // Create entity with only required fields (packageName)
-        // For other parameters, passing null for strings and 0 for integers
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                0,
-                null,
-                null,
-                0,
-                0,
-                null
-        );
+    public AiMinuteDataEntity(long timestamp, int uid, String packageName, int appCategory, int appTrustLevel, long accessMinute, int accessHour, int accessDate, String grantedPermissions, String requestedPermissions, int isForeground, PermissionUsedCount permissionUsedCount, SensorDuration sensorDuration) {
+        this.timestamp = timestamp;
+        this.uid = uid;
+        this.packageName = packageName;
+        this.appCategory = appCategory;
+        this.appTrustLevel = appTrustLevel;
+        this.accessMinute = accessMinute;
+        this.accessHour = accessHour;
+        this.accessDate = accessDate;
+        this.grantedPermissions = grantedPermissions;
+        this.requestedPermissions = requestedPermissions;
+        this.isForeground = isForeground;
+        // all permission
+        this.permissionUsedCamera = permissionUsedCount.getPermissionUsedCamera();
+        this.permissionUsedMicrophone = permissionUsedCount.getPermissionUsedMicrophone();
+        this.permissionUsedGetLocation = permissionUsedCount.getPermissionUsedGetLocation();
+        this.permissionUsedCoarseLocation = permissionUsedCount.getPermissionUsedCoarseLocation();
+        this.permissionUsedStorage = permissionUsedCount.getPermissionUsedStorage();
+        this.permissionUsedReadMediaAural = permissionUsedCount.getPermissionUsedReadMediaAural();
+        this.permissionUsedReadMediaVisual = permissionUsedCount.getPermissionUsedReadMediaVisual();
+        this.permissionUsedAccessVideos = permissionUsedCount.getPermissionUsedAccessVideos();
+        this.permissionUsedAccessPhotos = permissionUsedCount.getPermissionUsedAccessPhotos();
+        this.permissionUsedReadContacts = permissionUsedCount.getPermissionUsedReadContacts();
+        this.permissionUsedEditAndDeleteContacts = permissionUsedCount.getPermissionUsedEditAndDeleteContacts();
+        this.permissionUsedSendSMS = permissionUsedCount.getPermissionUsedSendSMS();
+        this.permissionUsedReceiveSMS = permissionUsedCount.getPermissionUsedReceiveSMS();
+        this.permissionUsedReadSMS = permissionUsedCount.getPermissionUsedReadSMS();
+        this.permissionUsedNearByDevices = permissionUsedCount.getPermissionUsedNearByDevices();
+        this.permissionUsedActivityRecognition = permissionUsedCount.getPermissionUsedActivityRecognition();
+        this.permissionUsedCalendar = permissionUsedCount.getPermissionUsedCalendar();
+        this.permissionUsedCallLogs = permissionUsedCount.getPermissionUsedCallLogs();
+        this.permissionUsedPhone = permissionUsedCount.getPermissionUsedPhone();
+        // sensor duration
+        this.cameraDuration = sensorDuration.getCameraDuration();
+        this.microphoneDuration = sensorDuration.getMicrophoneDuration();
+        this.locationDuration = sensorDuration.getLocationDuration();
+    }
+} and 
+public class PermissionUsedCount {
+    private int permissionUsedCamera;
+    private int permissionUsedMicrophone;
+    private int permissionUsedGetLocation;
+    private int permissionUsedCoarseLocation;
+    private int permissionUsedStorage;
+    private int permissionUsedReadMediaAural;
+    private int permissionUsedReadMediaVisual;
+    private int permissionUsedAccessVideos;
+    private int permissionUsedAccessPhotos;
+    private int permissionUsedReadContacts;
+    private int permissionUsedEditAndDeleteContacts;
+    private int permissionUsedSendSMS;
+    private int permissionUsedReceiveSMS;
+    private int permissionUsedReadSMS;
+    private int permissionUsedNearByDevices;
+    private int permissionUsedActivityRecognition;
+    private int permissionUsedCalendar;
+    private int permissionUsedCallLogs;
+    private int permissionUsedPhone;
 
-        // Verify required field has expected value and others are null/default
-        assertEquals(VALID_PACKAGE_NAME, entity.packageName);
-        assertEquals(0, entity.uid);
-        assertNull(entity.appName);
-        assertNull(entity.appCategoryName);
-        assertEquals(0, entity.appCategoryId);
-        assertEquals(0, entity.appTrustLevel);
-        assertNull(entity.additionalData);
+    public int getPermissionUsedCamera() {
+        return permissionUsedCamera;
     }
 
-    /**
-     * POSITIVE TEST CASE 3: Update app trust level
-     */
-    @Test
-    public void testUpdateAppTrustLevel() {
-        // Create entity with initial trust level
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                VALID_UID,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                VALID_ADDITIONAL_DATA
-        );
-
-        // Verify initial trust level
-        assertEquals(VALID_TRUST_LEVEL, entity.appTrustLevel);
-
-        // Update trust level
-        int newTrustLevel = 4;
-        entity.appTrustLevel = newTrustLevel;
-
-        // Verify trust level was updated
-        assertEquals(newTrustLevel, entity.appTrustLevel);
+    public void setPermissionUsedCamera(int permissionUsedCamera) {
+        this.permissionUsedCamera = permissionUsedCamera;
     }
 
-    /**
-     * POSITIVE TEST CASE 4: Update app category information
-     */
-    @Test
-    public void testUpdateAppCategoryInfo() {
-        // Create entity with initial category info
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                VALID_UID,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                VALID_ADDITIONAL_DATA
-        );
-
-        // Verify initial category info
-        assertEquals(VALID_CATEGORY_NAME, entity.appCategoryName);
-        assertEquals(VALID_CATEGORY_ID, entity.appCategoryId);
-
-        // Update category info
-        String newCategoryName = "Games";
-        int newCategoryId = 8;
-        entity.appCategoryName = newCategoryName;
-        entity.appCategoryId = newCategoryId;
-
-        // Verify category info was updated
-        assertEquals(newCategoryName, entity.appCategoryName);
-        assertEquals(newCategoryId, entity.appCategoryId);
+    public int getPermissionUsedMicrophone() {
+        return permissionUsedMicrophone;
     }
 
-    /**
-     * POSITIVE TEST CASE 5: Store and retrieve additional data
-     */
-    @Test
-    public void testStoreAndRetrieveAdditionalData() {
-        // Create JSON string for additionalData
-        String jsonData = "{\"permissions\":[\"CAMERA\",\"STORAGE\"],\"installDate\":\"2023-04-10\"}";
-        
-        // Create entity with JSON data
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                VALID_UID,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                jsonData
-        );
-
-        // Verify additionalData contains the exact JSON string
-        assertEquals(jsonData, entity.additionalData);
+    public void setPermissionUsedMicrophone(int permissionUsedMicrophone) {
+        this.permissionUsedMicrophone = permissionUsedMicrophone;
     }
 
-    /**
-     * POSITIVE TEST CASE 6: Create AppInfoEntity with minimum and maximum integer values
-     */
-    @Test
-    public void testCreateWithExtremeIntegerValues() {
-        // Create entity with extreme integer values
-        AppInfoEntity entity = new AppInfoEntity(
-                VALID_PACKAGE_NAME,
-                Integer.MIN_VALUE,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                Integer.MAX_VALUE,
-                Integer.MAX_VALUE,
-                VALID_ADDITIONAL_DATA
-        );
-
-        // Verify extreme values were stored correctly
-        assertEquals(Integer.MIN_VALUE, entity.uid);
-        assertEquals(Integer.MAX_VALUE, entity.appCategoryId);
-        assertEquals(Integer.MAX_VALUE, entity.appTrustLevel);
+    public int getPermissionUsedGetLocation() {
+        return permissionUsedGetLocation;
     }
 
-    /**
-     * POSITIVE TEST CASE 7: Create AppInfoEntity with special characters in string fields
-     */
-    @Test
-    public void testCreateWithSpecialCharacters() {
-        // Create strings with special characters
-        String packageWithSpecialChars = "com.example.test_app.special";
-        String appNameWithSpecialChars = "Test App #1 (Special Edition) & More!";
-        String categoryWithSpecialChars = "Games & Entertainment";
-        String additionalDataWithSpecialChars = "{\"notes\":\"Special characters: !@#$%^&*()\"}";
-        
-        // Create entity with special characters
-        AppInfoEntity entity = new AppInfoEntity(
-                packageWithSpecialChars,
-                VALID_UID,
-                appNameWithSpecialChars,
-                categoryWithSpecialChars,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                additionalDataWithSpecialChars
-        );
-
-        // Verify special characters were preserved
-        assertEquals(packageWithSpecialChars, entity.packageName);
-        assertEquals(appNameWithSpecialChars, entity.appName);
-        assertEquals(categoryWithSpecialChars, entity.appCategoryName);
-        assertEquals(additionalDataWithSpecialChars, entity.additionalData);
+    public void setPermissionUsedGetLocation(int permissionUsedGetLocation) {
+        this.permissionUsedGetLocation = permissionUsedGetLocation;
     }
 
-    /**
-     * NEGATIVE TEST CASE 1: Create AppInfoEntity with null packageName
-     * Expected: NullPointerException or similar validation exception
-     */
-    @Test
-    public void testCreateWithNullPackageName() {
-        try {
-            // Attempt to create entity with null packageName (marked as @NonNull)
-            AppInfoEntity entity = new AppInfoEntity(
-                    null, // This should trigger an exception
-                    VALID_UID,
-                    VALID_APP_NAME,
-                    VALID_CATEGORY_NAME,
-                    VALID_CATEGORY_ID,
-                    VALID_TRUST_LEVEL,
-                    VALID_ADDITIONAL_DATA
-            );
-            
-            // If we reach here without an exception, the test has failed
-            fail("Expected NullPointerException was not thrown for null packageName");
-        } catch (NullPointerException e) {
-            // Test passes if NullPointerException is caught
-            assertTrue(true);
-        }
+    public int getPermissionUsedCoarseLocation() {
+        return permissionUsedCoarseLocation;
     }
 
-    /**
-     * NEGATIVE TEST CASE 2: Create AppInfoEntity with invalid package name format
-     * Note: This assumes there's validation for package name format.
-     * If no validation exists, this test would need to be modified.
-     */
-    @Test
-    public void testCreateWithInvalidPackageNameFormat() {
-        // List of potentially invalid package names
-        String[] invalidPackageNames = {
-            "",                  // Empty string
-            "invalid",           // Missing dots
-            "invalid.package.",  // Ending with dot
-            ".invalid.package",  // Starting with dot
-            "Invalid.Package"    // Capital letters (may or may not be valid depending on implementation)
-        };
-        
-        for (String invalidPackageName : invalidPackageNames) {
-            try {
-                AppInfoEntity entity = new AppInfoEntity(
-                        invalidPackageName,
-                        VALID_UID,
-                        VALID_APP_NAME,
-                        VALID_CATEGORY_NAME,
-                        VALID_CATEGORY_ID,
-                        VALID_TRUST_LEVEL,
-                        VALID_ADDITIONAL_DATA
-                );
-                
-                // If we reach here without exception, log the potentially invalid package name
-                // that was accepted (this isn't necessarily a failure if validation isn't implemented)
-                System.out.println("Note: Potentially invalid package name accepted: " + invalidPackageName);
-                
-            } catch (Exception e) {
-                // Exception caught - this is expected for invalid formats if validation exists
-                assertTrue("Exception thrown for invalid package name: " + invalidPackageName, true);
-            }
-        }
+    public void setPermissionUsedCoarseLocation(int permissionUsedCoarseLocation) {
+        this.permissionUsedCoarseLocation = permissionUsedCoarseLocation;
     }
 
-    /**
-     * NEGATIVE TEST CASE 3: Create AppInfoEntity with negative UID value
-     * Note: This assumes there's validation for UID values.
-     * If no validation exists, this becomes an edge case test.
-     */
-    @Test
-    public void testCreateWithNegativeUid() {
-        int negativeUid = -1;
-        
-        try {
-            AppInfoEntity entity = new AppInfoEntity(
-                    VALID_PACKAGE_NAME,
-                    negativeUid,
-                    VALID_APP_NAME,
-                    VALID_CATEGORY_NAME,
-                    VALID_CATEGORY_ID,
-                    VALID_TRUST_LEVEL,
-                    VALID_ADDITIONAL_DATA
-            );
-            
-            // If we reach here without exception, check if the negative UID was accepted
-            assertEquals(negativeUid, entity.uid);
-            System.out.println("Note: Negative UID accepted: " + negativeUid);
-            
-        } catch (Exception e) {
-            // Exception caught - this is expected if validation exists
-            assertTrue("Exception thrown for negative UID as expected", true);
-        }
+    public int getPermissionUsedStorage() {
+        return permissionUsedStorage;
+    }
+
+    public void setPermissionUsedStorage(int permissionUsedStorage) {
+        this.permissionUsedStorage = permissionUsedStorage;
+    }
+
+    public int getPermissionUsedReadMediaAural() {
+        return permissionUsedReadMediaAural;
+    }
+
+    public void setPermissionUsedReadMediaAural(int permissionUsedReadMediaAural) {
+        this.permissionUsedReadMediaAural = permissionUsedReadMediaAural;
+    }
+
+    public int getPermissionUsedReadMediaVisual() {
+        return permissionUsedReadMediaVisual;
+    }
+
+    public void setPermissionUsedReadMediaVisual(int permissionUsedReadMediaVisual) {
+        this.permissionUsedReadMediaVisual = permissionUsedReadMediaVisual;
+    }
+
+    public int getPermissionUsedAccessVideos() {
+        return permissionUsedAccessVideos;
+    }
+
+    public void setPermissionUsedAccessVideos(int permissionUsedAccessVideos) {
+        this.permissionUsedAccessVideos = permissionUsedAccessVideos;
+    }
+
+    public int getPermissionUsedAccessPhotos() {
+        return permissionUsedAccessPhotos;
+    }
+
+    public void setPermissionUsedAccessPhotos(int permissionUsedAccessPhotos) {
+        this.permissionUsedAccessPhotos = permissionUsedAccessPhotos;
+    }
+
+    public int getPermissionUsedReadContacts() {
+        return permissionUsedReadContacts;
+    }
+
+    public void setPermissionUsedReadContacts(int permissionUsedReadContacts) {
+        this.permissionUsedReadContacts = permissionUsedReadContacts;
+    }
+
+    public int getPermissionUsedEditAndDeleteContacts() {
+        return permissionUsedEditAndDeleteContacts;
+    }
+
+    public void setPermissionUsedEditAndDeleteContacts(int permissionUsedEditAndDeleteContacts) {
+        this.permissionUsedEditAndDeleteContacts = permissionUsedEditAndDeleteContacts;
+    }
+
+    public int getPermissionUsedSendSMS() {
+        return permissionUsedSendSMS;
+    }
+
+    public void setPermissionUsedSendSMS(int permissionUsedSendSMS) {
+        this.permissionUsedSendSMS = permissionUsedSendSMS;
+    }
+
+    public int getPermissionUsedReceiveSMS() {
+        return permissionUsedReceiveSMS;
+    }
+
+    public void setPermissionUsedReceiveSMS(int permissionUsedReceiveSMS) {
+        this.permissionUsedReceiveSMS = permissionUsedReceiveSMS;
+    }
+
+    public int getPermissionUsedReadSMS() {
+        return permissionUsedReadSMS;
+    }
+
+    public void setPermissionUsedReadSMS(int permissionUsedReadSMS) {
+        this.permissionUsedReadSMS = permissionUsedReadSMS;
+    }
+
+    public int getPermissionUsedNearByDevices() {
+        return permissionUsedNearByDevices;
+    }
+
+    public void setPermissionUsedNearByDevices(int permissionUsedNearByDevices) {
+        this.permissionUsedNearByDevices = permissionUsedNearByDevices;
+    }
+
+    public int getPermissionUsedActivityRecognition() {
+        return permissionUsedActivityRecognition;
+    }
+
+    public void setPermissionUsedActivityRecognition(int permissionUsedActivityRecognition) {
+        this.permissionUsedActivityRecognition = permissionUsedActivityRecognition;
+    }
+
+    public int getPermissionUsedCalendar() {
+        return permissionUsedCalendar;
+    }
+
+    public void setPermissionUsedCalendar(int permissionUsedCalendar) {
+        this.permissionUsedCalendar = permissionUsedCalendar;
+    }
+
+    public int getPermissionUsedCallLogs() {
+        return permissionUsedCallLogs;
+    }
+
+    public void setPermissionUsedCallLogs(int permissionUsedCallLogs) {
+        this.permissionUsedCallLogs = permissionUsedCallLogs;
+    }
+
+    public int getPermissionUsedPhone() {
+        return permissionUsedPhone;
+    }
+
+    public void setPermissionUsedPhone(int permissionUsedPhone) {
+        this.permissionUsedPhone = permissionUsedPhone;
+    }
+}
+
+public class SensorDuration {
+    private long cameraDuration;
+    private long microphoneDuration;
+    private long locationDuration;
+
+    public SensorDuration() {
+
+    }
+
+    public SensorDuration(long cameraDuration, long microphoneDuration, long locationDuration) {
+        this.cameraDuration = cameraDuration;
+        this.microphoneDuration = microphoneDuration;
+        this.locationDuration = locationDuration;
+    }
+
+    public long getCameraDuration() {
+        return cameraDuration;
+    }
+
+    public void setCameraDuration(long cameraDuration) {
+        this.cameraDuration = cameraDuration;
+    }
+
+    public long getMicrophoneDuration() {
+        return microphoneDuration;
+    }
+
+    public void setMicrophoneDuration(long microphoneDuration) {
+        this.microphoneDuration = microphoneDuration;
+    }
+
+    public long getLocationDuration() {
+        return locationDuration;
+    }
+
+    public void setLocationDuration(long locationDuration) {
+        this.locationDuration = locationDuration;
     }
 }
