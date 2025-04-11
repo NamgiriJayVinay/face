@@ -208,18 +208,26 @@ public class AppInfoEntityTest {
      * NEGATIVE TEST CASE 1: Create AppInfoEntity with null packageName
      * Expected: NullPointerException or similar validation exception
      */
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCreateWithNullPackageName() {
-        // Attempt to create entity with null packageName (marked as @NonNull)
-        AppInfoEntity entity = new AppInfoEntity(
-                null, // This should trigger an exception
-                VALID_UID,
-                VALID_APP_NAME,
-                VALID_CATEGORY_NAME,
-                VALID_CATEGORY_ID,
-                VALID_TRUST_LEVEL,
-                VALID_ADDITIONAL_DATA
-        );
+        try {
+            // Attempt to create entity with null packageName (marked as @NonNull)
+            AppInfoEntity entity = new AppInfoEntity(
+                    null, // This should trigger an exception
+                    VALID_UID,
+                    VALID_APP_NAME,
+                    VALID_CATEGORY_NAME,
+                    VALID_CATEGORY_ID,
+                    VALID_TRUST_LEVEL,
+                    VALID_ADDITIONAL_DATA
+            );
+            
+            // If we reach here without an exception, the test has failed
+            fail("Expected NullPointerException was not thrown for null packageName");
+        } catch (NullPointerException e) {
+            // Test passes if NullPointerException is caught
+            assertTrue(true);
+        }
     }
 
     /**
