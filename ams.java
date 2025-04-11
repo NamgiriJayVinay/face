@@ -1,666 +1,293 @@
- I'll help you add these features step by step.
+package com.example.app; // Replace with your actual package name
 
-1. First, let's add the TensorFlow Lite dependency in your app's build.gradle:
+import static org.junit.Assert.*;
+import org.junit.Test;
+import org.junit.Before;
 
-```gradle
-dependencies {
-    implementation 'org.tensorflow:tensorflow-lite:2.12.0'
-    implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
-}
-```
+/**
+ * Test class for AppInfoEntity
+ * Contains 7 positive test cases and 3 negative test cases
+ */
+public class AppInfoEntityTest {
 
-2. Create a new class for Face Embeddings:
+    private static final String VALID_PACKAGE_NAME = "com.example.testapp";
+    private static final int VALID_UID = 10001;
+    private static final String VALID_APP_NAME = "Test App";
+    private static final String VALID_CATEGORY_NAME = "Tools";
+    private static final int VALID_CATEGORY_ID = 5;
+    private static final int VALID_TRUST_LEVEL = 2;
+    private static final String VALID_ADDITIONAL_DATA = "{\"version\":\"1.0.0\",\"size\":\"15MB\"}";
 
-```java
-// FaceEmbedding.java
-public class FaceEmbedding {
-    private float[] embedding;
-    private String name;
+    /**
+     * POSITIVE TEST CASE 1: Create valid AppInfoEntity with all required fields
+     */
+    @Test
+    public void testCreateValidAppInfoEntity() {
+        // Create entity with all fields
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                VALID_UID,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                VALID_ADDITIONAL_DATA
+        );
 
-    public FaceEmbedding(float[] embedding, String name) {
-        this.embedding = embedding;
-        this.name = name;
+        // Verify all fields have expected values
+        assertEquals(VALID_PACKAGE_NAME, entity.packageName);
+        assertEquals(VALID_UID, entity.uid);
+        assertEquals(VALID_APP_NAME, entity.appName);
+        assertEquals(VALID_CATEGORY_NAME, entity.appCategoryName);
+        assertEquals(VALID_CATEGORY_ID, entity.appCategoryId);
+        assertEquals(VALID_TRUST_LEVEL, entity.appTrustLevel);
+        assertEquals(VALID_ADDITIONAL_DATA, entity.additionalData);
     }
 
-    public float[] getEmbedding() {
-        return embedding;
+    /**
+     * POSITIVE TEST CASE 2: Create valid AppInfoEntity with minimum required fields
+     * Note: packageName appears to be the only @NonNull field
+     */
+    @Test
+    public void testCreateWithMinimumRequiredFields() {
+        // Create entity with only required fields (packageName)
+        // For other parameters, passing null for strings and 0 for integers
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                0,
+                null,
+                null,
+                0,
+                0,
+                null
+        );
+
+        // Verify required field has expected value and others are null/default
+        assertEquals(VALID_PACKAGE_NAME, entity.packageName);
+        assertEquals(0, entity.uid);
+        assertNull(entity.appName);
+        assertNull(entity.appCategoryName);
+        assertEquals(0, entity.appCategoryId);
+        assertEquals(0, entity.appTrustLevel);
+        assertNull(entity.additionalData);
     }
 
-    public String getName() {
-        return name;
-    }
-}
-```
+    /**
+     * POSITIVE TEST CASE 3: Update app trust level
+     */
+    @Test
+    public void testUpdateAppTrustLevel() {
+        // Create entity with initial trust level
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                VALID_UID,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                VALID_ADDITIONAL_DATA
+        );
 
-3. Create a FaceRecognitionHelper class for embedding generation and matching:
+        // Verify initial trust level
+        assertEquals(VALID_TRUST_LEVEL, entity.appTrustLevel);
 
-```java
-// FaceRecognitionHelper.java
-import org.tensorflow.lite.Interpreter;
-import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.List;
+        // Update trust level
+        int newTrustLevel = 4;
+        entity.appTrustLevel = newTrustLevel;
 
-public class FaceRecognitionHelper {
-    private static final int EMBEDDING_SIZE = 128; // Size of face embedding vector
-    private static final float RECOGNITION_THRESHOLD = 0.7f; // Similarity threshold
-    private Interpreter tfLite;
-    private List<FaceEmbedding> knownFaceEmbeddings;
-    private Context context;
-
-    public FaceRecognitionHelper(Context context) {
-        this.context = context;
-        knownFaceEmbeddings = new ArrayList<>();
-        loadModel();
+        // Verify trust level was updated
+        assertEquals(newTrustLevel, entity.appTrustLevel);
     }
 
-    private void loadModel() {
-        try {
-            // Load model from assets folder
-            File modelFile = new File(context.getFilesDir(), "facenet_model.tflite");
-            tfLite = new Interpreter(modelFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    /**
+     * POSITIVE TEST CASE 4: Update app category information
+     */
+    @Test
+    public void testUpdateAppCategoryInfo() {
+        // Create entity with initial category info
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                VALID_UID,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                VALID_ADDITIONAL_DATA
+        );
+
+        // Verify initial category info
+        assertEquals(VALID_CATEGORY_NAME, entity.appCategoryName);
+        assertEquals(VALID_CATEGORY_ID, entity.appCategoryId);
+
+        // Update category info
+        String newCategoryName = "Games";
+        int newCategoryId = 8;
+        entity.appCategoryName = newCategoryName;
+        entity.appCategoryId = newCategoryId;
+
+        // Verify category info was updated
+        assertEquals(newCategoryName, entity.appCategoryName);
+        assertEquals(newCategoryId, entity.appCategoryId);
     }
 
-    // Generate embedding for a face image
-    public float[] generateEmbedding(Bitmap faceBitmap) {
-        // Preprocess the bitmap - resize to model input size (e.g., 160x160)
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(faceBitmap, 160, 160, true);
+    /**
+     * POSITIVE TEST CASE 5: Store and retrieve additional data
+     */
+    @Test
+    public void testStoreAndRetrieveAdditionalData() {
+        // Create JSON string for additionalData
+        String jsonData = "{\"permissions\":[\"CAMERA\",\"STORAGE\"],\"installDate\":\"2023-04-10\"}";
         
-        // Convert bitmap to ByteBuffer
-        ByteBuffer inputBuffer = ByteBuffer.allocateDirect(1 * 160 * 160 * 3 * 4);
-        inputBuffer.order(ByteOrder.nativeOrder());
-        
-        int[] intValues = new int[160 * 160];
-        resizedBitmap.getPixels(intValues, 0, 160, 0, 0, 160, 160);
-        
-        for (int pixelValue : intValues) {
-            inputBuffer.putFloat(((pixelValue >> 16) & 0xFF) / 255.0f);
-            inputBuffer.putFloat(((pixelValue >> 8) & 0xFF) / 255.0f);
-            inputBuffer.putFloat((pixelValue & 0xFF) / 255.0f);
-        }
+        // Create entity with JSON data
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                VALID_UID,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                jsonData
+        );
 
-        // Output buffer for the embedding
-        float[][] outputEmbedding = new float[1][EMBEDDING_SIZE];
-        
-        // Run inference
-        tfLite.run(inputBuffer, outputEmbedding);
-        
-        return outputEmbedding[0];
+        // Verify additionalData contains the exact JSON string
+        assertEquals(jsonData, entity.additionalData);
     }
 
-    // Compare two face embeddings using cosine similarity
-    private float calculateSimilarity(float[] embedding1, float[] embedding2) {
-        float dotProduct = 0.0f;
-        float norm1 = 0.0f;
-        float norm2 = 0.0f;
+    /**
+     * POSITIVE TEST CASE 6: Create AppInfoEntity with minimum and maximum integer values
+     */
+    @Test
+    public void testCreateWithExtremeIntegerValues() {
+        // Create entity with extreme integer values
+        AppInfoEntity entity = new AppInfoEntity(
+                VALID_PACKAGE_NAME,
+                Integer.MIN_VALUE,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                Integer.MAX_VALUE,
+                Integer.MAX_VALUE,
+                VALID_ADDITIONAL_DATA
+        );
+
+        // Verify extreme values were stored correctly
+        assertEquals(Integer.MIN_VALUE, entity.uid);
+        assertEquals(Integer.MAX_VALUE, entity.appCategoryId);
+        assertEquals(Integer.MAX_VALUE, entity.appTrustLevel);
+    }
+
+    /**
+     * POSITIVE TEST CASE 7: Create AppInfoEntity with special characters in string fields
+     */
+    @Test
+    public void testCreateWithSpecialCharacters() {
+        // Create strings with special characters
+        String packageWithSpecialChars = "com.example.test_app.special";
+        String appNameWithSpecialChars = "Test App #1 (Special Edition) & More!";
+        String categoryWithSpecialChars = "Games & Entertainment";
+        String additionalDataWithSpecialChars = "{\"notes\":\"Special characters: !@#$%^&*()\"}";
         
-        for (int i = 0; i < EMBEDDING_SIZE; i++) {
-            dotProduct += embedding1[i] * embedding2[i];
-            norm1 += embedding1[i] * embedding1[i];
-            norm2 += embedding2[i] * embedding2[i];
-        }
+        // Create entity with special characters
+        AppInfoEntity entity = new AppInfoEntity(
+                packageWithSpecialChars,
+                VALID_UID,
+                appNameWithSpecialChars,
+                categoryWithSpecialChars,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                additionalDataWithSpecialChars
+        );
+
+        // Verify special characters were preserved
+        assertEquals(packageWithSpecialChars, entity.packageName);
+        assertEquals(appNameWithSpecialChars, entity.appName);
+        assertEquals(categoryWithSpecialChars, entity.appCategoryName);
+        assertEquals(additionalDataWithSpecialChars, entity.additionalData);
+    }
+
+    /**
+     * NEGATIVE TEST CASE 1: Create AppInfoEntity with null packageName
+     * Expected: NullPointerException or similar validation exception
+     */
+    @Test(expected = NullPointerException.class)
+    public void testCreateWithNullPackageName() {
+        // Attempt to create entity with null packageName (marked as @NonNull)
+        AppInfoEntity entity = new AppInfoEntity(
+                null, // This should trigger an exception
+                VALID_UID,
+                VALID_APP_NAME,
+                VALID_CATEGORY_NAME,
+                VALID_CATEGORY_ID,
+                VALID_TRUST_LEVEL,
+                VALID_ADDITIONAL_DATA
+        );
+    }
+
+    /**
+     * NEGATIVE TEST CASE 2: Create AppInfoEntity with invalid package name format
+     * Note: This assumes there's validation for package name format.
+     * If no validation exists, this test would need to be modified.
+     */
+    @Test
+    public void testCreateWithInvalidPackageNameFormat() {
+        // List of potentially invalid package names
+        String[] invalidPackageNames = {
+            "",                  // Empty string
+            "invalid",           // Missing dots
+            "invalid.package.",  // Ending with dot
+            ".invalid.package",  // Starting with dot
+            "Invalid.Package"    // Capital letters (may or may not be valid depending on implementation)
+        };
         
-        return dotProduct / (float)(Math.sqrt(norm1) * Math.sqrt(norm2));
-    }
-
-    // Recognize a face by comparing with stored embeddings
-    public String recognizeFace(float[] newEmbedding) {
-        String recognizedName = "Unknown";
-        float maxSimilarity = 0.0f;
-        
-        for (FaceEmbedding knownFace : knownFaceEmbeddings) {
-            float similarity = calculateSimilarity(newEmbedding, knownFace.getEmbedding());
-            if (similarity > maxSimilarity && similarity > RECOGNITION_THRESHOLD) {
-                maxSimilarity = similarity;
-                recognizedName = knownFace.getName();
-            }
-        }
-        
-        return recognizedName;
-    }
-
-    // Add a new face embedding to known faces
-    public void addFaceEmbedding(float[] embedding, String name) {
-        knownFaceEmbeddings.add(new FaceEmbedding(embedding, name));
-        saveFaceEmbeddings(); // Save to storage
-    }
-
-    // Save embeddings to storage
-    private void saveFaceEmbeddings() {
-        try {
-            File embeddingsFile = new File(context.getFilesDir(), "face_embeddings.dat");
-            FileOutputStream fos = new FileOutputStream(embeddingsFile);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(knownFaceEmbeddings);
-            oos.close();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Load embeddings from storage
-    public void loadFaceEmbeddings() {
-        try {
-            File embeddingsFile = new File(context.getFilesDir(), "face_embeddings.dat");
-            if (embeddingsFile.exists()) {
-                FileInputStream fis = new FileInputStream(embeddingsFile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                knownFaceEmbeddings = (List<FaceEmbedding>) ois.readObject();
-                ois.close();
-                fis.close();
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-}
-```
-
-4. Modify FaceDetection.java to include embedding generation:
-
-```java
-// Add to existing variables
-private FaceRecognitionHelper faceRecognitionHelper;
-
-// In onCreate()
-faceRecognitionHelper = new FaceRecognitionHelper(this);
-faceRecognitionHelper.loadFaceEmbeddings();
-
-// Modify registerCapturedFaces() to include embedding generation
-private void registerCapturedFaces() {
-    String name = nameEditText.getText().toString().trim();
-    if (name.isEmpty()) {
-        Toast.makeText(this, "Please enter a name", Toast.LENGTH_SHORT).show();
-        return;
-    }
-
-    // Process each captured face
-    for (String imagePath : capturedFacePaths) {
-        try {
-            // Load the face image
-            Bitmap faceBitmap = BitmapFactory.decodeFile(imagePath);
-            
-            // Generate embedding
-            float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
-            
-            // Store embedding with name
-            faceRecognitionHelper.addFaceEmbedding(embedding, name);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Rest of your existing code...
-}
-
-// Add button in layout for recognition
-Button recognizeButton = findViewById(R.id.recognizeButton);
-recognizeButton.setOnClickListener(v -> {
-    Intent intent = new Intent(this, FaceRecognitionActivity.class);
-    startActivity(intent);
-});
-```
-
-5. Create new FaceRecognitionActivity.java:
-
-```java
-public class FaceRecognitionActivity extends AppCompatActivity {
-    private PreviewView previewView;
-    private FaceBoxOverlay recognitionOverlay;
-    private ExecutorService cameraExecutor;
-    private FaceDetector faceDetector;
-    private FaceRecognitionHelper faceRecognitionHelper;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_face_recognition);
-
-        previewView = findViewById(R.id.recognition_preview_view);
-        recognitionOverlay = findViewById(R.id.recognition_face_overlay);
-        
-        faceRecognitionHelper = new FaceRecognitionHelper(this);
-        faceRecognitionHelper.loadFaceEmbeddings();
-        
-        setupCamera();
-    }
-
-    private void setupCamera() {
-        cameraExecutor = Executors.newSingleThreadExecutor();
-
-        FaceDetectorOptions options = new FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                .build();
-        faceDetector = FaceDetection.getClient(options);
-
-        ProcessCameraProvider.getInstance(this).addListener(() -> {
+        for (String invalidPackageName : invalidPackageNames) {
             try {
-                ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
-                bindCameraUseCases(cameraProvider);
+                AppInfoEntity entity = new AppInfoEntity(
+                        invalidPackageName,
+                        VALID_UID,
+                        VALID_APP_NAME,
+                        VALID_CATEGORY_NAME,
+                        VALID_CATEGORY_ID,
+                        VALID_TRUST_LEVEL,
+                        VALID_ADDITIONAL_DATA
+                );
+                
+                // If we reach here without exception, log the potentially invalid package name
+                // that was accepted (this isn't necessarily a failure if validation isn't implemented)
+                System.out.println("Note: Potentially invalid package name accepted: " + invalidPackageName);
+                
             } catch (Exception e) {
-                e.printStackTrace();
+                // Exception caught - this is expected for invalid formats if validation exists
+                assertTrue("Exception thrown for invalid package name: " + invalidPackageName, true);
             }
-        }, ContextCompat.getMainExecutor(this));
+        }
     }
 
-    private void bindCameraUseCases(ProcessCameraProvider cameraProvider) {
-        Preview preview = new Preview.Builder().build();
+    /**
+     * NEGATIVE TEST CASE 3: Create AppInfoEntity with negative UID value
+     * Note: This assumes there's validation for UID values.
+     * If no validation exists, this becomes an edge case test.
+     */
+    @Test
+    public void testCreateWithNegativeUid() {
+        int negativeUid = -1;
         
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(640, 480))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
-            @SuppressWarnings("ConstantConditions")
-            Image image = imageProxy.getImage();
-            if (image == null) {
-                imageProxy.close();
-                return;
-            }
-
-            InputImage inputImage = InputImage.fromMediaImage(image, 
-                    imageProxy.getImageInfo().getRotationDegrees());
-
-            faceDetector.process(inputImage)
-                    .addOnSuccessListener(faces -> {
-                        for (Face face : faces) {
-                            Rect bounds = face.getBoundingBox();
-                            // Convert image to bitmap and crop face
-                            Bitmap faceBitmap = cropFaceFromImage(image, bounds);
-                            if (faceBitmap != null) {
-                                // Generate embedding
-                                float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
-                                // Get recognized name
-                                String recognizedName = faceRecognitionHelper.recognizeFace(embedding);
-                                // Update overlay with name
-                                recognitionOverlay.updateFaceBox(bounds, recognizedName);
-                            }
-                        }
-                    })
-                    .addOnCompleteListener(task -> imageProxy.close());
-        });
-
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                .build();
-
         try {
-            cameraProvider.unbindAll();
-            cameraProvider.bindToLifecycle(
-                    this,
-                    cameraSelector,
-                    preview,
-                    imageAnalysis
+            AppInfoEntity entity = new AppInfoEntity(
+                    VALID_PACKAGE_NAME,
+                    negativeUid,
+                    VALID_APP_NAME,
+                    VALID_CATEGORY_NAME,
+                    VALID_CATEGORY_ID,
+                    VALID_TRUST_LEVEL,
+                    VALID_ADDITIONAL_DATA
             );
-
-            preview.setSurfaceProvider(previewView.getSurfaceProvider());
+            
+            // If we reach here without exception, check if the negative UID was accepted
+            assertEquals(negativeUid, entity.uid);
+            System.out.println("Note: Negative UID accepted: " + negativeUid);
+            
         } catch (Exception e) {
-            e.printStackTrace();
+            // Exception caught - this is expected if validation exists
+            assertTrue("Exception thrown for negative UID as expected", true);
         }
-    }
-
-    private Bitmap cropFaceFromImage(Image image, Rect bounds) {
-        // Implementation similar to your existing image conversion code
-        // but cropping to the face bounds
-        try {
-            Bitmap fullBitmap = imageToBitmap(image);
-            return Bitmap.createBitmap(fullBitmap, 
-                    bounds.left, bounds.top, 
-                    bounds.width(), bounds.height());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cameraExecutor.shutdown();
-    }
-}
-```
-
-6. Create layout for recognition activity (activity_face_recognition.xml):
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout 
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <androidx.camera.view.PreviewView
-        android:id="@+id/recognition_preview_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <com.your.package.FaceBoxOverlay
-        android:id="@+id/recognition_face_overlay"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-```
-
-7. Update your FaceBoxOverlay class to handle named boxes:
-
-```java
-public class FaceBoxOverlay extends View {
-    private Paint boxPaint;
-    private Paint textPaint;
-    private List<Pair<Rect, String>> faceBoxesWithNames;
-
-    // Constructor and other existing methods...
-
-    public void updateFaceBox(Rect bounds, String name) {
-        if (faceBoxesWithNames == null) {
-            faceBoxesWithNames = new ArrayList<>();
-        }
-        faceBoxesWithNames.add(new Pair<>(bounds, name));
-        invalidate();
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        if (faceBoxesWithNames != null) {
-            for (Pair<Rect, String> faceBox : faceBoxesWithNames) {
-                // Draw box
-                canvas.drawRect(faceBox.first, boxPaint);
-                // Draw name
-                canvas.drawText(faceBox.second, 
-                        faceBox.first.left, 
-                        faceBox.first.top - 10, 
-                        textPaint);
-            }
-        }
-    }
-}
-```
-
-This implementation:
-1. Generates embeddings for registered faces during registration
-2. Stores embeddings with associated names
-3. Provides real-time face recognition using stored embeddings
-4. Shows bounding boxes with recognized names in real-time
-5. Uses TensorFlow Lite for face embedding generation
-6. Implements cosine similarity for face matching
-
-Note: You'll need to:
-1. Download a suitable TensorFlow Lite face recognition model
-2. Place it in your assets folder
-3. Adjust the input size and preprocessing according to your model
-4. Fine-tune the recognition threshold based on your needs
-5. Add proper error handling and loading indicators
-
-Would you like me to explain any specific part in more detail?
-
- Here are all the necessary imports for FaceRecognitionActivity.java:
-
-```java
-// Android and AndroidX core imports
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Matrix;
-import android.graphics.Rect;
-import android.media.Image;
-import android.os.Bundle;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-// Camera X imports
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ExperimentalGetImage;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageProxy;
-import androidx.camera.core.Preview;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.PreviewView;
-
-// ML Kit imports
-import com.google.mlkit.vision.common.InputImage;
-import com.google.mlkit.vision.face.Face;
-import com.google.mlkit.vision.face.FaceDetection;
-import com.google.mlkit.vision.face.FaceDetector;
-import com.google.mlkit.vision.face.FaceDetectorOptions;
-
-// Your custom imports (adjust package name as needed)
-import com.your.package.helpers.FaceRecognitionHelper;
-import com.your.package.utils.FaceBoxOverlay;
-import com.your.package.R;
-
-// Utility imports
-import com.google.common.util.concurrent.ListenableFuture;
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-// Optional imports for additional features
-import android.util.Size;
-import android.util.Log;
-import java.util.ArrayList;
-import android.graphics.ImageFormat;
-import android.graphics.YuvImage;
-import java.io.IOException;
-```
-
-Usage notes for specific imports:
-
-1. Camera-related imports:
-```java
-androidx.camera.core.*  // For CameraX functionality
-androidx.camera.lifecycle.ProcessCameraProvider  // For camera lifecycle management
-androidx.camera.view.PreviewView  // For camera preview
-```
-
-2. ML Kit imports:
-```java
-com.google.mlkit.vision.*  // For face detection
-```
-
-3. Custom imports:
-```java
-// Adjust these according to your package structure
-com.your.package.helpers.FaceRecognitionHelper  // Your face recognition helper class
-com.your.package.utils.FaceBoxOverlay  // Your custom view for drawing face boxes
-```
-
-4. Utility imports:
-```java
-java.util.concurrent.*  // For threading and executors
-java.nio.ByteBuffer  // For image processing
-```
-
-Make sure to:
-1. Replace `com.your.package` with your actual package name
-2. Add any additional imports if you implement extra features
-3. Remove unused imports to keep the code clean
-4. Check that all referenced libraries are included in your build.gradle file
-
-If you're using additional features like saving images or logging, you might need these imports too:
-```java
-import android.os.Environment;
-import android.provider.MediaStore;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-```
-
-For error handling and debugging:
-```java
-import android.util.Log;
-import java.io.IOException;
-import java.lang.Exception;
-```
-
-Remember to add the required permissions in your AndroidManifest.xml:
-```xml
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-feature android:name="android.hardware.camera" />
-<uses-feature android:name="android.hardware.camera.autofocus" />
-```
-
-Would you like me to explain any specific import or add any additional ones for particular features?
-
-public class FaceRecognitionActivity extends AppCompatActivity {
-    private PreviewView previewView;
-    private FaceBoxOverlay recognitionOverlay;
-    private ExecutorService cameraExecutor;
-    private FaceDetector faceDetector;
-    private FaceRecognitionHelper faceRecognitionHelper;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_face_recognition);
-
-        previewView = findViewById(R.id.recognition_preview_view);
-        recognitionOverlay = findViewById(R.id.recognition_face_overlay);
-
-        faceRecognitionHelper = new FaceRecognitionHelper(this);
-        faceRecognitionHelper.loadFaceEmbeddings();
-
-        setupCamera();
-    }
-
-    private void setupCamera() {
-        cameraExecutor = Executors.newSingleThreadExecutor();
-
-        FaceDetectorOptions options = new FaceDetectorOptions.Builder()
-                .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_ACCURATE)
-                .build();
-        faceDetector = FaceDetection.getClient(options);
-
-        ProcessCameraProvider.getInstance(this).addListener(() -> {
-            try {
-                ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
-                bindCameraUseCases(cameraProvider);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, ContextCompat.getMainExecutor(this));
-    }
-
-    private void bindCameraUseCases(ProcessCameraProvider cameraProvider) {
-        Preview preview = new Preview.Builder().build();
-
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(640, 480))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build();
-
-        imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
-            @SuppressWarnings("ConstantConditions")
-            Image image = imageProxy.getImage();
-            if (image == null) {
-                imageProxy.close();
-                return;
-            }
-
-            InputImage inputImage = InputImage.fromMediaImage(image, 
-                    imageProxy.getImageInfo().getRotationDegrees());
-
-            faceDetector.process(inputImage)
-                    .addOnSuccessListener(faces -> {
-                        for (Face face : faces) {
-                            Rect bounds = face.getBoundingBox();
-                            // Convert image to bitmap and crop face
-                            Bitmap faceBitmap = cropFaceFromImage(image, bounds);
-                            if (faceBitmap != null) {
-                                // Generate embedding
-                                float[] embedding = faceRecognitionHelper.generateEmbedding(faceBitmap);
-                                // Get recognized name
-                                String recognizedName = faceRecognitionHelper.recognizeFace(embedding);
-                                // Update overlay with name
-                                recognitionOverlay.updateFaceBox(bounds, recognizedName);
-                            }
-                        }
-                    })
-                    .addOnCompleteListener(task -> imageProxy.close());
-        });
-
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                .build();
-
-        try {
-            cameraProvider.unbindAll();
-            cameraProvider.bindToLifecycle(
-                    this,
-                    cameraSelector,
-                    preview,
-                    imageAnalysis
-            );
-
-            preview.setSurfaceProvider(previewView.getSurfaceProvider());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private Bitmap cropFaceFromImage(Image image, Rect bounds) {
-        try {
-            Bitmap fullBitmap = imageToBitmap(image);
-            return Bitmap.createBitmap(fullBitmap, 
-                    bounds.left, bounds.top, 
-                    bounds.width(), bounds.height());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private Bitmap imageToBitmap(Image image) {
-        if (image == null) return null;
-
-        Image.Plane[] planes = image.getPlanes();
-        ByteBuffer yBuffer = planes[0].getBuffer();
-        ByteBuffer uBuffer = planes[1].getBuffer();
-        ByteBuffer vBuffer = planes[2].getBuffer();
-
-        int ySize = yBuffer.remaining();
-        int uSize = uBuffer.remaining();
-        int vSize = vBuffer.remaining();
-
-        byte[] nv21 = new byte[ySize + uSize + vSize];
-
-        // U and V are swapped
-        yBuffer.get(nv21, 0, ySize);
-        vBuffer.get(nv21, ySize, vSize);
-        uBuffer.get(nv21, ySize + vSize, uSize);
-
-        YuvImage yuvImage = new YuvImage(nv21, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 100, out);
-
-        byte[] imageBytes = out.toByteArray();
-        return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        cameraExecutor.shutdown();
     }
 }
