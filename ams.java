@@ -1,15 +1,36 @@
 
-@Dao
-public interface AiMinuteDataDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(AiMinuteDataEntity aiMinuteSample);
+public class AppInfo {
+    private int uid;
+    private int app_category_id;
+    private int app_trust_level;
 
-    @Query("SELECT access_minute FROM " + TABLE_AI_MINUTE_DATA + " ORDER BY access_minute DESC LIMIT 1")
-    long getLastPreProcessAccessMinute();
+    public AppInfo(int uid, int app_category_id, int app_trust_level) {
+        this.uid = uid;
+        this.app_category_id = app_category_id;
+        this.app_trust_level = app_trust_level;
+    }
 
-    @Query("SELECT * FROM ai_minute_data WHERE access_minute > :lastInfTime ")
-    List<AiMinuteDataEntity> getMinuteDataFromLastInferenceTimestamp(long lastInfTime);
+    public int getUid() {
+        return uid;
+    }
 
-    @Query("DELETE FROM " + TABLE_AI_MINUTE_DATA)
-    void deleteAll();
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public int getAppCategoryId() {
+        return app_category_id;
+    }
+
+    public void setAppCategoryId(int app_category_id) {
+        this.app_category_id = app_category_id;
+    }
+
+    public int getAppTrustLevel() {
+        return app_trust_level;
+    }
+
+    public void setAppTrustLevel(int app_trust_level) {
+        this.app_trust_level = app_trust_level;
+    }
 }
