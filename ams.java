@@ -6,22 +6,36 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 
 /**
- * Test class for AppInfo
+ * Test class for Event
  * Contains 3 positive test cases and 15 negative test cases
  */
-public class AppInfoTest {
+public class EventTest {
 
     // Test constants
-    private static final int VALID_UID = 10001;
-    private static final int VALID_APP_CATEGORY_ID = 5;
-    private static final int VALID_APP_TRUST_LEVEL = 2;
+    private static final String VALID_PERMISSION = "android.permission.CAMERA";
+    private static final String VALID_TYPE = "PERMISSION_USED";
+    private static final String VALID_STATE = "ACTIVE";
+    private static final double VALID_NUMBER = 1.0;
+    private static final long VALID_TIMESTAMP = 1650000000000L;
+    private static final double VALID_SCORE = 0.85;
+    private static final Float VALID_RECONSTRUCTION_ERROR = 0.12f;
+    private static final Float VALID_RECONSTRUCTION_THRESHOLD = 0.5f;
     
-    private AppInfo appInfo;
+    private Event event;
     
     @BeforeEach
     public void setUp() {
         // Initialize with valid values before each test
-        appInfo = new AppInfo(VALID_UID, VALID_APP_CATEGORY_ID, VALID_APP_TRUST_LEVEL);
+        event = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
     }
 
     /* ========== POSITIVE TEST CASES ========== */
@@ -32,9 +46,16 @@ public class AppInfoTest {
     @Test
     public void testConstructorInitializesWithCorrectValues() {
         // Verify all fields have expected values
-        assertEquals(VALID_UID, appInfo.getUid(), "UID should match constructor value");
-        assertEquals(VALID_APP_CATEGORY_ID, appInfo.getAppCategoryId(), "App category ID should match constructor value");
-        assertEquals(VALID_APP_TRUST_LEVEL, appInfo.getAppTrustLevel(), "App trust level should match constructor value");
+        assertEquals(VALID_PERMISSION, event.getPermission(), "Permission should match constructor value");
+        assertEquals(VALID_TYPE, event.getType(), "Type should match constructor value");
+        assertEquals(VALID_STATE, event.getState(), "State should match constructor value");
+        assertEquals(VALID_NUMBER, event.getNumber(), "Number should match constructor value");
+        assertEquals(VALID_TIMESTAMP, event.getTotalBackgroundUsage(), "Background usage should be zero by default");
+        assertEquals(VALID_SCORE, event.getScore(), "Score should match constructor value");
+        assertEquals(VALID_RECONSTRUCTION_ERROR, event.getReconstructionError(), "Reconstruction error should match constructor value");
+        assertEquals(VALID_RECONSTRUCTION_THRESHOLD, event.getReconstructionThreshold(), "Reconstruction threshold should match constructor value");
+        assertEquals(0, event.getTotalBackgroundUsage(), "Background usage should be zero by default");
+        assertEquals(0, event.getTotalForegroundUsage(), "Foreground usage should be zero by default");
     }
 
     /**
@@ -43,123 +64,224 @@ public class AppInfoTest {
     @Test
     public void testSettersUpdateValuesCorrectly() {
         // New test values
-        int newUid = 20002;
-        int newCategoryId = 8;
-        int newTrustLevel = 3;
+        double newScore = 0.95;
+        Float newReconstructionError = 0.25f;
+        Float newReconstructionThreshold = 0.75f;
+        long newBackgroundUsage = 3600000L; // 1 hour in milliseconds
+        long newForegroundUsage = 1800000L; // 30 minutes in milliseconds
         
         // Set new values
-        appInfo.setUid(newUid);
-        appInfo.setAppCategoryId(newCategoryId);
-        appInfo.setAppTrustLevel(newTrustLevel);
+        event.setScore(newScore);
+        event.setReconstructionError(newReconstructionError);
+        event.setReconstructionThreshold(newReconstructionThreshold);
+        event.setTotalBackgroundUsage(newBackgroundUsage);
+        event.setTotalForegroundUsage(newForegroundUsage);
         
         // Verify values were updated
-        assertEquals(newUid, appInfo.getUid(), "UID should be updated");
-        assertEquals(newCategoryId, appInfo.getAppCategoryId(), "App category ID should be updated");
-        assertEquals(newTrustLevel, appInfo.getAppTrustLevel(), "App trust level should be updated");
+        assertEquals(newScore, event.getScore(), "Score should be updated");
+        assertEquals(newReconstructionError, event.getReconstructionError(), "Reconstruction error should be updated");
+        assertEquals(newReconstructionThreshold, event.getReconstructionThreshold(), "Reconstruction threshold should be updated");
+        assertEquals(newBackgroundUsage, event.getTotalBackgroundUsage(), "Background usage should be updated");
+        assertEquals(newForegroundUsage, event.getTotalForegroundUsage(), "Foreground usage should be updated");
     }
 
     /**
-     * POSITIVE TEST CASE 3: Test with multiple instances having different values
+     * POSITIVE TEST CASE 3: Test with valid null values for nullable fields
      */
     @Test
-    public void testMultipleInstancesWithDifferentValues() {
-        // Create a second instance with different values
-        AppInfo appInfo2 = new AppInfo(30003, 10, 4);
+    public void testWithNullValues() {
+        // Create event with null values for nullable fields
+        Event nullableEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            null, // reconstructionError
+            null  // reconstructionThreshold
+        );
         
-        // Verify first instance still has original values
-        assertEquals(VALID_UID, appInfo.getUid(), "First instance UID should remain unchanged");
-        assertEquals(VALID_APP_CATEGORY_ID, appInfo.getAppCategoryId(), "First instance app category ID should remain unchanged");
-        assertEquals(VALID_APP_TRUST_LEVEL, appInfo.getAppTrustLevel(), "First instance app trust level should remain unchanged");
+        // Verify nullable fields are null
+        assertNull(nullableEvent.getReconstructionError(), "Reconstruction error should be null");
+        assertNull(nullableEvent.getReconstructionThreshold(), "Reconstruction threshold should be null");
         
-        // Verify second instance has its own values
-        assertEquals(30003, appInfo2.getUid(), "Second instance should have its own UID");
-        assertEquals(10, appInfo2.getAppCategoryId(), "Second instance should have its own app category ID");
-        assertEquals(4, appInfo2.getAppTrustLevel(), "Second instance should have its own app trust level");
-        
-        // Change value in first instance and verify it doesn't affect second instance
-        appInfo.setUid(40004);
-        assertEquals(40004, appInfo.getUid(), "First instance UID should be updated");
-        assertEquals(30003, appInfo2.getUid(), "Second instance UID should remain unchanged");
+        // Verify non-nullable fields still have values
+        assertEquals(VALID_PERMISSION, nullableEvent.getPermission(), "Permission should have value");
     }
 
     /* ========== NEGATIVE TEST CASES ========== */
 
     /**
-     * NEGATIVE TEST CASE 1: Test with negative UID value
+     * NEGATIVE TEST CASE 1: Test with negative numeric values
      */
     @Test
-    public void testWithNegativeUid() {
-        int negativeUid = -1000;
-        appInfo.setUid(negativeUid);
+    public void testWithNegativeNumericValues() {
+        // Create event with negative values
+        Event negativeEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            -10.5, // negative number
+            -1000L, // negative timestamp
+            -0.75, // negative score
+            -0.3f, // negative reconstructionError
+            -0.5f  // negative reconstructionThreshold
+        );
         
-        // Verify negative value was accepted
-        assertEquals(negativeUid, appInfo.getUid(), "Negative UID should be accepted");
+        // Verify negative values were accepted
+        assertEquals(-10.5, negativeEvent.getNumber(), "Negative number should be accepted");
+        assertEquals(-0.75, negativeEvent.getScore(), "Negative score should be accepted");
+        assertEquals(-0.3f, negativeEvent.getReconstructionError(), "Negative reconstruction error should be accepted");
+        assertEquals(-0.5f, negativeEvent.getReconstructionThreshold(), "Negative reconstruction threshold should be accepted");
+        
+        // Test with negative usage values
+        negativeEvent.setTotalBackgroundUsage(-5000L);
+        negativeEvent.setTotalForegroundUsage(-2500L);
+        
+        assertEquals(-5000L, negativeEvent.getTotalBackgroundUsage(), "Negative background usage should be accepted");
+        assertEquals(-2500L, negativeEvent.getTotalForegroundUsage(), "Negative foreground usage should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 2: Test with negative category ID
+     * NEGATIVE TEST CASE 2: Test with empty strings
      */
     @Test
-    public void testWithNegativeCategoryId() {
-        int negativeCategoryId = -5;
-        appInfo.setAppCategoryId(negativeCategoryId);
+    public void testWithEmptyStrings() {
+        // Create event with empty strings
+        Event emptyStringsEvent = new Event(
+            "", // empty permission
+            "", // empty type
+            "", // empty state
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
         
-        // Verify negative value was accepted
-        assertEquals(negativeCategoryId, appInfo.getAppCategoryId(), "Negative category ID should be accepted");
+        // Verify empty strings were accepted
+        assertEquals("", emptyStringsEvent.getPermission(), "Empty permission should be accepted");
+        assertEquals("", emptyStringsEvent.getType(), "Empty type should be accepted");
+        assertEquals("", emptyStringsEvent.getState(), "Empty state should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 3: Test with negative trust level
+     * NEGATIVE TEST CASE 3: Test with null strings
      */
     @Test
-    public void testWithNegativeTrustLevel() {
-        int negativeTrustLevel = -2;
-        appInfo.setAppTrustLevel(negativeTrustLevel);
+    public void testWithNullStrings() {
+        // Create event with null strings
+        Event nullStringsEvent = new Event(
+            null, // null permission
+            null, // null type
+            null, // null state
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
         
-        // Verify negative value was accepted
-        assertEquals(negativeTrustLevel, appInfo.getAppTrustLevel(), "Negative trust level should be accepted");
+        // Verify null strings were accepted
+        assertNull(nullStringsEvent.getPermission(), "Null permission should be accepted");
+        assertNull(nullStringsEvent.getType(), "Null type should be accepted");
+        assertNull(nullStringsEvent.getState(), "Null state should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 4: Test with extreme integer values for UID
+     * NEGATIVE TEST CASE 4: Test with extreme numeric values
      */
     @Test
-    public void testWithExtremeUidValues() {
-        // Test with maximum integer value
-        appInfo.setUid(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, appInfo.getUid(), "Maximum integer UID should be accepted");
+    public void testWithExtremeValues() {
+        // Create event with extreme values
+        Event extremeEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            Double.MAX_VALUE,  // max double
+            Long.MAX_VALUE,    // max long
+            Double.MAX_VALUE,  // max double
+            Float.MAX_VALUE,   // max float
+            Float.MAX_VALUE    // max float
+        );
         
-        // Test with minimum integer value
-        appInfo.setUid(Integer.MIN_VALUE);
-        assertEquals(Integer.MIN_VALUE, appInfo.getUid(), "Minimum integer UID should be accepted");
+        // Verify extreme values were accepted
+        assertEquals(Double.MAX_VALUE, extremeEvent.getNumber(), "Maximum double should be accepted");
+        assertEquals(Long.MAX_VALUE, extremeEvent.getTotalBackgroundUsage(), "Maximum long should be accepted");
+        assertEquals(Double.MAX_VALUE, extremeEvent.getScore(), "Maximum double should be accepted");
+        assertEquals(Float.MAX_VALUE, extremeEvent.getReconstructionError(), "Maximum float should be accepted");
+        assertEquals(Float.MAX_VALUE, extremeEvent.getReconstructionThreshold(), "Maximum float should be accepted");
+        
+        // Test with minimum values
+        extremeEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            Double.MIN_VALUE,  // min positive double
+            Long.MIN_VALUE,    // min long
+            Double.MIN_VALUE,  // min positive double
+            Float.MIN_VALUE,   // min positive float
+            Float.MIN_VALUE    // min positive float
+        );
+        
+        // Verify minimum values were accepted
+        assertEquals(Double.MIN_VALUE, extremeEvent.getNumber(), "Minimum double should be accepted");
+        assertEquals(Long.MIN_VALUE, extremeEvent.getTotalBackgroundUsage(), "Minimum long should be accepted");
+        assertEquals(Double.MIN_VALUE, extremeEvent.getScore(), "Minimum double should be accepted");
+        assertEquals(Float.MIN_VALUE, extremeEvent.getReconstructionError(), "Minimum float should be accepted");
+        assertEquals(Float.MIN_VALUE, extremeEvent.getReconstructionThreshold(), "Minimum float should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 5: Test with extreme integer values for category ID
+     * NEGATIVE TEST CASE 5: Test with special characters in strings
      */
     @Test
-    public void testWithExtremeCategoryIdValues() {
-        // Test with maximum integer value
-        appInfo.setAppCategoryId(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, appInfo.getAppCategoryId(), "Maximum integer category ID should be accepted");
+    public void testWithSpecialCharacters() {
+        // Create event with special characters
+        String specialPermission = "android.permission.CAMERA!@#$%^&*()_+{}|:\"<>?[]\\;',./";
+        String specialType = "PERMISSION_USED<>?";
+        String specialState = "ACTIVE-_+=";
         
-        // Test with minimum integer value
-        appInfo.setAppCategoryId(Integer.MIN_VALUE);
-        assertEquals(Integer.MIN_VALUE, appInfo.getAppCategoryId(), "Minimum integer category ID should be accepted");
+        Event specialCharsEvent = new Event(
+            specialPermission,
+            specialType,
+            specialState,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
+        
+        // Verify special characters were accepted
+        assertEquals(specialPermission, specialCharsEvent.getPermission(), "Special characters in permission should be accepted");
+        assertEquals(specialType, specialCharsEvent.getType(), "Special characters in type should be accepted");
+        assertEquals(specialState, specialCharsEvent.getState(), "Special characters in state should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 6: Test with extreme integer values for trust level
+     * NEGATIVE TEST CASE 6: Test with NaN and Infinity values
      */
     @Test
-    public void testWithExtremeTrustLevelValues() {
-        // Test with maximum integer value
-        appInfo.setAppTrustLevel(Integer.MAX_VALUE);
-        assertEquals(Integer.MAX_VALUE, appInfo.getAppTrustLevel(), "Maximum integer trust level should be accepted");
+    public void testWithNaNAndInfinity() {
+        // Create event with NaN and Infinity
+        Event nanInfinityEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            Double.NaN,            // NaN
+            VALID_TIMESTAMP,
+            Double.POSITIVE_INFINITY, // +Infinity
+            Float.NaN,             // NaN
+            Float.NEGATIVE_INFINITY  // -Infinity
+        );
         
-        // Test with minimum integer value
-        appInfo.setAppTrustLevel(Integer.MIN_VALUE);
-        assertEquals(Integer.MIN_VALUE, appInfo.getAppTrustLevel(), "Minimum integer trust level should be accepted");
+        // Verify NaN and Infinity were accepted
+        assertTrue(Double.isNaN(nanInfinityEvent.getNumber()), "NaN should be accepted for number");
+        assertTrue(Double.isInfinite(nanInfinityEvent.getScore()), "Infinity should be accepted for score");
+        assertTrue(Float.isNaN(nanInfinityEvent.getReconstructionError()), "NaN should be accepted for reconstruction error");
+        assertTrue(Float.isInfinite(nanInfinityEvent.getReconstructionThreshold()), "Infinity should be accepted for reconstruction threshold");
     }
 
     /**
@@ -168,11 +290,30 @@ public class AppInfoTest {
     @Test
     public void testCompareEqualInstances() {
         // Create two instances with the same values
-        AppInfo appInfo1 = new AppInfo(VALID_UID, VALID_APP_CATEGORY_ID, VALID_APP_TRUST_LEVEL);
-        AppInfo appInfo2 = new AppInfo(VALID_UID, VALID_APP_CATEGORY_ID, VALID_APP_TRUST_LEVEL);
+        Event event1 = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
+        
+        Event event2 = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
         
         // Verify objects are different even with the same values (equals() not overridden)
-        assertNotEquals(appInfo1, appInfo2, "Different instances should not be equal");
+        assertNotEquals(event1, event2, "Different instances should not be equal");
     }
 
     /**
@@ -181,19 +322,16 @@ public class AppInfoTest {
     @Test
     public void testFieldAccessWithReflection() throws Exception {
         // Access private fields with reflection
-        Field uidField = AppInfo.class.getDeclaredField("uid");
-        Field categoryField = AppInfo.class.getDeclaredField("app_category_id");
-        Field trustField = AppInfo.class.getDeclaredField("app_trust_level");
+        Field permissionField = Event.class.getDeclaredField("permission");
+        Field scoreField = Event.class.getDeclaredField("score");
         
         // Make fields accessible
-        uidField.setAccessible(true);
-        categoryField.setAccessible(true);
-        trustField.setAccessible(true);
+        permissionField.setAccessible(true);
+        scoreField.setAccessible(true);
         
         // Verify field values match getter values
-        assertEquals(appInfo.getUid(), uidField.getInt(appInfo), "UID field value should match getter");
-        assertEquals(appInfo.getAppCategoryId(), categoryField.getInt(appInfo), "Category ID field value should match getter");
-        assertEquals(appInfo.getAppTrustLevel(), trustField.getInt(appInfo), "Trust level field value should match getter");
+        assertEquals(event.getPermission(), permissionField.get(event), "Permission field value should match getter");
+        assertEquals(event.getScore(), scoreField.getDouble(event), "Score field value should match getter");
     }
 
     /**
@@ -202,15 +340,15 @@ public class AppInfoTest {
     @Test
     public void testFieldModificationWithReflection() throws Exception {
         // Access private fields with reflection
-        Field uidField = AppInfo.class.getDeclaredField("uid");
-        uidField.setAccessible(true);
+        Field permissionField = Event.class.getDeclaredField("permission");
+        permissionField.setAccessible(true);
         
         // Modify field directly
-        int newUid = 50005;
-        uidField.setInt(appInfo, newUid);
+        String newPermission = "android.permission.LOCATION";
+        permissionField.set(event, newPermission);
         
         // Verify getter reflects the change
-        assertEquals(newUid, appInfo.getUid(), "UID getter should reflect direct field modification");
+        assertEquals(newPermission, event.getPermission(), "Permission getter should reflect direct field modification");
     }
 
     /**
@@ -219,90 +357,74 @@ public class AppInfoTest {
     @Test
     public void testStringRepresentation() {
         // Get string representation
-        String stringRepresentation = appInfo.toString();
+        String stringRepresentation = event.toString();
         
         // Verify it contains class name (default toString behavior)
-        assertTrue(stringRepresentation.contains("AppInfo@"), "String representation should contain class name");
+        assertTrue(stringRepresentation.contains("Event@"), "String representation should contain class name");
     }
 
     /**
-     * NEGATIVE TEST CASE 11: Test object casting
+     * NEGATIVE TEST CASE 11: Test using with numeric type conversion/casting
      */
     @Test
-    public void testObjectCasting() {
-        // Cast to Object
-        Object obj = appInfo;
+    public void testNumericTypeConversion() {
+        // Set specific value
+        event.setScore(123.456);
         
-        // Cast back to AppInfo
-        AppInfo castedAppInfo = (AppInfo) obj;
+        // Convert to different types
+        int scoreAsInt = (int) event.getScore(); // Cast to int
+        float scoreAsFloat = (float) event.getScore(); // Cast to float
+        long scoreAsLong = (long) event.getScore(); // Cast to long
         
-        // Verify fields preserved through casting
-        assertEquals(VALID_UID, castedAppInfo.getUid(), "UID should be preserved through casting");
-        assertEquals(VALID_APP_CATEGORY_ID, castedAppInfo.getAppCategoryId(), "Category ID should be preserved through casting");
-        assertEquals(VALID_APP_TRUST_LEVEL, castedAppInfo.getAppTrustLevel(), "Trust level should be preserved through casting");
+        // Verify conversions
+        assertEquals(123, scoreAsInt, "Score as int should be truncated");
+        assertEquals(123.456f, scoreAsFloat, 0.0001f, "Score as float should be approximately equal");
+        assertEquals(123L, scoreAsLong, "Score as long should be truncated");
     }
 
     /**
-     * NEGATIVE TEST CASE 12: Test invalid casting (should throw ClassCastException)
+     * NEGATIVE TEST CASE 12: Test field initialization without setters
      */
     @Test
-    public void testInvalidCasting() {
-        // Cast to Object
-        Object obj = appInfo;
+    public void testFieldInitialization() throws Exception {
+        // Create a new event
+        Event newEvent = new Event(
+            VALID_PERMISSION,
+            VALID_TYPE,
+            VALID_STATE,
+            VALID_NUMBER,
+            VALID_TIMESTAMP,
+            VALID_SCORE,
+            VALID_RECONSTRUCTION_ERROR,
+            VALID_RECONSTRUCTION_THRESHOLD
+        );
         
-        // Attempt to cast to invalid type
-        assertThrows(ClassCastException.class, () -> {
-            String invalidCast = (String) obj;
-        }, "Invalid casting should throw ClassCastException");
+        // Access private fields with reflection
+        Field backgroundUsageField = Event.class.getDeclaredField("totalBackgroundUsage");
+        Field foregroundUsageField = Event.class.getDeclaredField("totalForegroundUsage");
+        
+        // Make fields accessible
+        backgroundUsageField.setAccessible(true);
+        foregroundUsageField.setAccessible(true);
+        
+        // Verify fields were initialized to 0 by default
+        assertEquals(0L, backgroundUsageField.getLong(newEvent), "Background usage should be initialized to 0");
+        assertEquals(0L, foregroundUsageField.getLong(newEvent), "Foreground usage should be initialized to 0");
     }
 
     /**
-     * NEGATIVE TEST CASE 13: Test binary operations on field values
+     * NEGATIVE TEST CASE 13: Test updating fields that don't have setters
      */
     @Test
-    public void testBinaryOperations() {
-        // Set specific values for binary operations
-        appInfo.setUid(10);        // 1010 in binary
-        appInfo.setAppCategoryId(6); // 0110 in binary
+    public void testUpdatingFieldsWithoutSetters() throws Exception {
+        // Access private fields with reflection
+        Field permissionField = Event.class.getDeclaredField("permission");
+        Field typeField = Event.class.getDeclaredField("type");
+        Field stateField = Event.class.getDeclaredField("state");
+        Field numberField = Event.class.getDeclaredField("number");
+        Field timestampField = Event.class.getDeclaredField("timestamp");
         
-        // Perform binary operations
-        int bitwiseAnd = appInfo.getUid() & appInfo.getAppCategoryId(); // 1010 & 0110 = 0010 = 2
-        int bitwiseOr = appInfo.getUid() | appInfo.getAppCategoryId();  // 1010 | 0110 = 1110 = 14
-        int bitwiseXor = appInfo.getUid() ^ appInfo.getAppCategoryId(); // 1010 ^ 0110 = 1100 = 12
-        
-        // Verify results
-        assertEquals(2, bitwiseAnd, "Bitwise AND should yield correct result");
-        assertEquals(14, bitwiseOr, "Bitwise OR should yield correct result");
-        assertEquals(12, bitwiseXor, "Bitwise XOR should yield correct result");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 14: Test integer overflow
-     */
-    @Test
-    public void testIntegerOverflow() {
-        // Set value to integer maximum
-        appInfo.setUid(Integer.MAX_VALUE);
-        int initialValue = appInfo.getUid();
-        
-        // Increment to cause overflow
-        appInfo.setUid(initialValue + 1);
-        
-        // Verify overflow occurred
-        assertEquals(Integer.MIN_VALUE, appInfo.getUid(), "Adding 1 to MAX_VALUE should cause overflow to MIN_VALUE");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 15: Test with null reference
-     */
-    @Test
-    public void testWithNullReference() {
-        // Set reference to null
-        AppInfo nullAppInfo = null;
-        
-        // Verify accessing methods on null reference throws NullPointerException
-        assertThrows(NullPointerException.class, () -> {
-            int uid = nullAppInfo.getUid();
-        }, "Accessing method on null reference should throw NullPointerException");
-    }
-}
+        // Make fields accessible
+        permissionField.setAccessible(true);
+        typeField.setAccessible(true);
+        st
