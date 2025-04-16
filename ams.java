@@ -1,42 +1,19 @@
 package com.example.app; // Replace with your actual package name
 
 import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
- * Test class for Event
+ * Test class for MinutePackage
  * Contains 3 positive test cases and 15 negative test cases
  */
-public class EventTest {
+public class MinutePackageTest {
 
     // Test constants
-    private static final String VALID_PERMISSION = "android.permission.CAMERA";
-    private static final String VALID_TYPE = "PERMISSION_USED";
-    private static final String VALID_STATE = "ACTIVE";
-    private static final double VALID_NUMBER = 1.0;
-    private static final long VALID_TIMESTAMP = 1650000000000L;
-    private static final double VALID_SCORE = 0.85;
-    private static final Float VALID_RECONSTRUCTION_ERROR = 0.12f;
-    private static final Float VALID_RECONSTRUCTION_THRESHOLD = 0.5f;
-    
-    private Event event;
-    
-    @BeforeEach
-    public void setUp() {
-        // Initialize with valid values before each test
-        event = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
-    }
+    private static final long VALID_ACCESS_MINUTE = 1650000000000L;
+    private static final String VALID_PACKAGE_NAMES = "com.example.app1,com.example.app2";
 
     /* ========== POSITIVE TEST CASES ========== */
 
@@ -45,310 +22,181 @@ public class EventTest {
      */
     @Test
     public void testConstructorInitializesWithCorrectValues() {
-        // Verify all fields have expected values
-        assertEquals(VALID_PERMISSION, event.getPermission(), "Permission should match constructor value");
-        assertEquals(VALID_TYPE, event.getType(), "Type should match constructor value");
-        assertEquals(VALID_STATE, event.getState(), "State should match constructor value");
-        assertEquals(VALID_NUMBER, event.getNumber(), "Number should match constructor value");
-        assertEquals(VALID_TIMESTAMP, event.getTotalBackgroundUsage(), "Background usage should be zero by default");
-        assertEquals(VALID_SCORE, event.getScore(), "Score should match constructor value");
-        assertEquals(VALID_RECONSTRUCTION_ERROR, event.getReconstructionError(), "Reconstruction error should match constructor value");
-        assertEquals(VALID_RECONSTRUCTION_THRESHOLD, event.getReconstructionThreshold(), "Reconstruction threshold should match constructor value");
-        assertEquals(0, event.getTotalBackgroundUsage(), "Background usage should be zero by default");
-        assertEquals(0, event.getTotalForegroundUsage(), "Foreground usage should be zero by default");
+        // Create instance with valid data
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        
+        // Verify fields have expected values
+        assertEquals(VALID_ACCESS_MINUTE, minutePackage.getAccess_minute(), "Access minute should match constructor value");
+        assertEquals(VALID_PACKAGE_NAMES, minutePackage.getPackageNames(), "Package names should match constructor value");
     }
 
     /**
-     * POSITIVE TEST CASE 2: Verify setter methods update values correctly
+     * POSITIVE TEST CASE 2: Test with multiple comma-separated package names
      */
     @Test
-    public void testSettersUpdateValuesCorrectly() {
-        // New test values
-        double newScore = 0.95;
-        Float newReconstructionError = 0.25f;
-        Float newReconstructionThreshold = 0.75f;
-        long newBackgroundUsage = 3600000L; // 1 hour in milliseconds
-        long newForegroundUsage = 1800000L; // 30 minutes in milliseconds
+    public void testWithMultiplePackageNames() {
+        // Create string with multiple package names
+        String multiplePackages = "com.example.app1,com.example.app2,com.example.app3,com.example.app4";
         
-        // Set new values
-        event.setScore(newScore);
-        event.setReconstructionError(newReconstructionError);
-        event.setReconstructionThreshold(newReconstructionThreshold);
-        event.setTotalBackgroundUsage(newBackgroundUsage);
-        event.setTotalForegroundUsage(newForegroundUsage);
+        // Create instance with multiple packages
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, multiplePackages);
         
-        // Verify values were updated
-        assertEquals(newScore, event.getScore(), "Score should be updated");
-        assertEquals(newReconstructionError, event.getReconstructionError(), "Reconstruction error should be updated");
-        assertEquals(newReconstructionThreshold, event.getReconstructionThreshold(), "Reconstruction threshold should be updated");
-        assertEquals(newBackgroundUsage, event.getTotalBackgroundUsage(), "Background usage should be updated");
-        assertEquals(newForegroundUsage, event.getTotalForegroundUsage(), "Foreground usage should be updated");
+        // Verify package names field contains all packages
+        assertEquals(multiplePackages, minutePackage.getPackageNames(), "Package names should contain all packages");
     }
 
     /**
-     * POSITIVE TEST CASE 3: Test with valid null values for nullable fields
+     * POSITIVE TEST CASE 3: Test with multiple instances having different values
      */
     @Test
-    public void testWithNullValues() {
-        // Create event with null values for nullable fields
-        Event nullableEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            null, // reconstructionError
-            null  // reconstructionThreshold
-        );
+    public void testMultipleInstancesWithDifferentValues() {
+        // Create first instance
+        MinutePackage minutePackage1 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
         
-        // Verify nullable fields are null
-        assertNull(nullableEvent.getReconstructionError(), "Reconstruction error should be null");
-        assertNull(nullableEvent.getReconstructionThreshold(), "Reconstruction threshold should be null");
+        // Create second instance with different values
+        long differentMinute = VALID_ACCESS_MINUTE + 60000; // +1 minute
+        String differentPackages = "com.example.different";
+        MinutePackage minutePackage2 = new MinutePackage(differentMinute, differentPackages);
         
-        // Verify non-nullable fields still have values
-        assertEquals(VALID_PERMISSION, nullableEvent.getPermission(), "Permission should have value");
+        // Verify first instance has original values
+        assertEquals(VALID_ACCESS_MINUTE, minutePackage1.getAccess_minute(), "First instance access minute should remain unchanged");
+        assertEquals(VALID_PACKAGE_NAMES, minutePackage1.getPackageNames(), "First instance package names should remain unchanged");
+        
+        // Verify second instance has different values
+        assertEquals(differentMinute, minutePackage2.getAccess_minute(), "Second instance should have different access minute");
+        assertEquals(differentPackages, minutePackage2.getPackageNames(), "Second instance should have different package names");
     }
 
     /* ========== NEGATIVE TEST CASES ========== */
 
     /**
-     * NEGATIVE TEST CASE 1: Test with negative numeric values
+     * NEGATIVE TEST CASE 1: Test with negative access_minute value
      */
     @Test
-    public void testWithNegativeNumericValues() {
-        // Create event with negative values
-        Event negativeEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            -10.5, // negative number
-            -1000L, // negative timestamp
-            -0.75, // negative score
-            -0.3f, // negative reconstructionError
-            -0.5f  // negative reconstructionThreshold
-        );
+    public void testWithNegativeAccessMinute() {
+        // Create instance with negative access minute
+        long negativeMinute = -1000L;
+        MinutePackage minutePackage = new MinutePackage(negativeMinute, VALID_PACKAGE_NAMES);
         
-        // Verify negative values were accepted
-        assertEquals(-10.5, negativeEvent.getNumber(), "Negative number should be accepted");
-        assertEquals(-0.75, negativeEvent.getScore(), "Negative score should be accepted");
-        assertEquals(-0.3f, negativeEvent.getReconstructionError(), "Negative reconstruction error should be accepted");
-        assertEquals(-0.5f, negativeEvent.getReconstructionThreshold(), "Negative reconstruction threshold should be accepted");
-        
-        // Test with negative usage values
-        negativeEvent.setTotalBackgroundUsage(-5000L);
-        negativeEvent.setTotalForegroundUsage(-2500L);
-        
-        assertEquals(-5000L, negativeEvent.getTotalBackgroundUsage(), "Negative background usage should be accepted");
-        assertEquals(-2500L, negativeEvent.getTotalForegroundUsage(), "Negative foreground usage should be accepted");
+        // Verify negative value was accepted
+        assertEquals(negativeMinute, minutePackage.getAccess_minute(), "Negative access minute should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 2: Test with empty strings
+     * NEGATIVE TEST CASE 2: Test with empty package names string
      */
     @Test
-    public void testWithEmptyStrings() {
-        // Create event with empty strings
-        Event emptyStringsEvent = new Event(
-            "", // empty permission
-            "", // empty type
-            "", // empty state
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
+    public void testWithEmptyPackageNames() {
+        // Create instance with empty package names
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, "");
         
-        // Verify empty strings were accepted
-        assertEquals("", emptyStringsEvent.getPermission(), "Empty permission should be accepted");
-        assertEquals("", emptyStringsEvent.getType(), "Empty type should be accepted");
-        assertEquals("", emptyStringsEvent.getState(), "Empty state should be accepted");
+        // Verify empty string was accepted
+        assertEquals("", minutePackage.getPackageNames(), "Empty package names should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 3: Test with null strings
+     * NEGATIVE TEST CASE 3: Test with null package names string
      */
     @Test
-    public void testWithNullStrings() {
-        // Create event with null strings
-        Event nullStringsEvent = new Event(
-            null, // null permission
-            null, // null type
-            null, // null state
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
+    public void testWithNullPackageNames() {
+        // Create instance with null package names
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, null);
         
-        // Verify null strings were accepted
-        assertNull(nullStringsEvent.getPermission(), "Null permission should be accepted");
-        assertNull(nullStringsEvent.getType(), "Null type should be accepted");
-        assertNull(nullStringsEvent.getState(), "Null state should be accepted");
+        // Verify null was accepted
+        assertNull(minutePackage.getPackageNames(), "Null package names should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 4: Test with extreme numeric values
+     * NEGATIVE TEST CASE 4: Test with extreme access_minute values
      */
     @Test
-    public void testWithExtremeValues() {
-        // Create event with extreme values
-        Event extremeEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            Double.MAX_VALUE,  // max double
-            Long.MAX_VALUE,    // max long
-            Double.MAX_VALUE,  // max double
-            Float.MAX_VALUE,   // max float
-            Float.MAX_VALUE    // max float
-        );
+    public void testWithExtremeAccessMinuteValues() {
+        // Test with maximum long value
+        MinutePackage maxMinutePackage = new MinutePackage(Long.MAX_VALUE, VALID_PACKAGE_NAMES);
+        assertEquals(Long.MAX_VALUE, maxMinutePackage.getAccess_minute(), "Maximum long value should be accepted for access minute");
         
-        // Verify extreme values were accepted
-        assertEquals(Double.MAX_VALUE, extremeEvent.getNumber(), "Maximum double should be accepted");
-        assertEquals(Long.MAX_VALUE, extremeEvent.getTotalBackgroundUsage(), "Maximum long should be accepted");
-        assertEquals(Double.MAX_VALUE, extremeEvent.getScore(), "Maximum double should be accepted");
-        assertEquals(Float.MAX_VALUE, extremeEvent.getReconstructionError(), "Maximum float should be accepted");
-        assertEquals(Float.MAX_VALUE, extremeEvent.getReconstructionThreshold(), "Maximum float should be accepted");
-        
-        // Test with minimum values
-        extremeEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            Double.MIN_VALUE,  // min positive double
-            Long.MIN_VALUE,    // min long
-            Double.MIN_VALUE,  // min positive double
-            Float.MIN_VALUE,   // min positive float
-            Float.MIN_VALUE    // min positive float
-        );
-        
-        // Verify minimum values were accepted
-        assertEquals(Double.MIN_VALUE, extremeEvent.getNumber(), "Minimum double should be accepted");
-        assertEquals(Long.MIN_VALUE, extremeEvent.getTotalBackgroundUsage(), "Minimum long should be accepted");
-        assertEquals(Double.MIN_VALUE, extremeEvent.getScore(), "Minimum double should be accepted");
-        assertEquals(Float.MIN_VALUE, extremeEvent.getReconstructionError(), "Minimum float should be accepted");
-        assertEquals(Float.MIN_VALUE, extremeEvent.getReconstructionThreshold(), "Minimum float should be accepted");
+        // Test with minimum long value
+        MinutePackage minMinutePackage = new MinutePackage(Long.MIN_VALUE, VALID_PACKAGE_NAMES);
+        assertEquals(Long.MIN_VALUE, minMinutePackage.getAccess_minute(), "Minimum long value should be accepted for access minute");
     }
 
     /**
-     * NEGATIVE TEST CASE 5: Test with special characters in strings
+     * NEGATIVE TEST CASE 5: Test with special characters in package names
      */
     @Test
-    public void testWithSpecialCharacters() {
-        // Create event with special characters
-        String specialPermission = "android.permission.CAMERA!@#$%^&*()_+{}|:\"<>?[]\\;',./";
-        String specialType = "PERMISSION_USED<>?";
-        String specialState = "ACTIVE-_+=";
+    public void testWithSpecialCharactersInPackageNames() {
+        // Create package names with special characters
+        String specialPackageNames = "com.example.app!@#$%^&*(),com.example.app_+{}|:\"<>?[]\\;'./";
         
-        Event specialCharsEvent = new Event(
-            specialPermission,
-            specialType,
-            specialState,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
+        // Create instance with special characters
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, specialPackageNames);
         
         // Verify special characters were accepted
-        assertEquals(specialPermission, specialCharsEvent.getPermission(), "Special characters in permission should be accepted");
-        assertEquals(specialType, specialCharsEvent.getType(), "Special characters in type should be accepted");
-        assertEquals(specialState, specialCharsEvent.getState(), "Special characters in state should be accepted");
+        assertEquals(specialPackageNames, minutePackage.getPackageNames(), "Special characters in package names should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 6: Test with NaN and Infinity values
-     */
-    @Test
-    public void testWithNaNAndInfinity() {
-        // Create event with NaN and Infinity
-        Event nanInfinityEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            Double.NaN,            // NaN
-            VALID_TIMESTAMP,
-            Double.POSITIVE_INFINITY, // +Infinity
-            Float.NaN,             // NaN
-            Float.NEGATIVE_INFINITY  // -Infinity
-        );
-        
-        // Verify NaN and Infinity were accepted
-        assertTrue(Double.isNaN(nanInfinityEvent.getNumber()), "NaN should be accepted for number");
-        assertTrue(Double.isInfinite(nanInfinityEvent.getScore()), "Infinity should be accepted for score");
-        assertTrue(Float.isNaN(nanInfinityEvent.getReconstructionError()), "NaN should be accepted for reconstruction error");
-        assertTrue(Float.isInfinite(nanInfinityEvent.getReconstructionThreshold()), "Infinity should be accepted for reconstruction threshold");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 7: Test comparing different instances with same values
+     * NEGATIVE TEST CASE 6: Test comparing different instances with same values
      */
     @Test
     public void testCompareEqualInstances() {
         // Create two instances with the same values
-        Event event1 = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
-        
-        Event event2 = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
+        MinutePackage minutePackage1 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        MinutePackage minutePackage2 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
         
         // Verify objects are different even with the same values (equals() not overridden)
-        assertNotEquals(event1, event2, "Different instances should not be equal");
+        assertNotEquals(minutePackage1, minutePackage2, "Different instances should not be equal");
     }
 
     /**
-     * NEGATIVE TEST CASE 8: Test field access with reflection
+     * NEGATIVE TEST CASE 7: Test field access with reflection
      */
     @Test
     public void testFieldAccessWithReflection() throws Exception {
+        // Create instance
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        
         // Access private fields with reflection
-        Field permissionField = Event.class.getDeclaredField("permission");
-        Field scoreField = Event.class.getDeclaredField("score");
+        Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
+        Field packageNamesField = MinutePackage.class.getDeclaredField("packageNames");
         
         // Make fields accessible
-        permissionField.setAccessible(true);
-        scoreField.setAccessible(true);
+        accessMinuteField.setAccessible(true);
+        packageNamesField.setAccessible(true);
         
         // Verify field values match getter values
-        assertEquals(event.getPermission(), permissionField.get(event), "Permission field value should match getter");
-        assertEquals(event.getScore(), scoreField.getDouble(event), "Score field value should match getter");
+        assertEquals(minutePackage.getAccess_minute(), accessMinuteField.getLong(minutePackage), "access_minute field value should match getter");
+        assertEquals(minutePackage.getPackageNames(), packageNamesField.get(minutePackage), "packageNames field value should match getter");
     }
 
     /**
-     * NEGATIVE TEST CASE 9: Test field modification with reflection
+     * NEGATIVE TEST CASE 8: Test field immutability (final modifier)
      */
     @Test
-    public void testFieldModificationWithReflection() throws Exception {
-        // Access private fields with reflection
-        Field permissionField = Event.class.getDeclaredField("permission");
-        permissionField.setAccessible(true);
+    public void testFieldImmutability() throws Exception {
+        // Access field modifiers
+        Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
+        Field packageNamesField = MinutePackage.class.getDeclaredField("packageNames");
         
-        // Modify field directly
-        String newPermission = "android.permission.LOCATION";
-        permissionField.set(event, newPermission);
+        // Verify fields have final modifier
+        assertTrue(Modifier.isFinal(accessMinuteField.getModifiers()), "access_minute field should be final");
+        assertTrue(Modifier.isFinal(packageNamesField.getModifiers()), "packageNames field should be final");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 9: Test field modification with reflection (should fail for final fields)
+     */
+    @Test
+    public void testFieldModificationWithReflection() {
+        // Create instance
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
         
-        // Verify getter reflects the change
-        assertEquals(newPermission, event.getPermission(), "Permission getter should reflect direct field modification");
+        // Attempt to modify final fields with reflection (should throw exception)
+        assertThrows(Exception.class, () -> {
+            Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
+            accessMinuteField.setAccessible(true);
+            accessMinuteField.setLong(minutePackage, VALID_ACCESS_MINUTE + 1);
+        }, "Modifying final field should throw exception");
     }
 
     /**
@@ -356,75 +204,93 @@ public class EventTest {
      */
     @Test
     public void testStringRepresentation() {
+        // Create instance
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        
         // Get string representation
-        String stringRepresentation = event.toString();
+        String stringRepresentation = minutePackage.toString();
         
         // Verify it contains class name (default toString behavior)
-        assertTrue(stringRepresentation.contains("Event@"), "String representation should contain class name");
+        assertTrue(stringRepresentation.contains("MinutePackage@"), "String representation should contain class name");
     }
 
     /**
-     * NEGATIVE TEST CASE 11: Test using with numeric type conversion/casting
+     * NEGATIVE TEST CASE 11: Test with very long package names string
      */
     @Test
-    public void testNumericTypeConversion() {
-        // Set specific value
-        event.setScore(123.456);
+    public void testWithVeryLongPackageNames() {
+        // Create very long package names string
+        StringBuilder longPackageNames = new StringBuilder();
+        for (int i = 0; i < 1000; i++) {
+            longPackageNames.append("com.example.app").append(i).append(",");
+        }
         
-        // Convert to different types
-        int scoreAsInt = (int) event.getScore(); // Cast to int
-        float scoreAsFloat = (float) event.getScore(); // Cast to float
-        long scoreAsLong = (long) event.getScore(); // Cast to long
+        // Create instance with very long package names
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, longPackageNames.toString());
         
-        // Verify conversions
-        assertEquals(123, scoreAsInt, "Score as int should be truncated");
-        assertEquals(123.456f, scoreAsFloat, 0.0001f, "Score as float should be approximately equal");
-        assertEquals(123L, scoreAsLong, "Score as long should be truncated");
+        // Verify very long string was accepted
+        assertEquals(longPackageNames.toString(), minutePackage.getPackageNames(), "Very long package names should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 12: Test field initialization without setters
+     * NEGATIVE TEST CASE 12: Test object casting
      */
     @Test
-    public void testFieldInitialization() throws Exception {
-        // Create a new event
-        Event newEvent = new Event(
-            VALID_PERMISSION,
-            VALID_TYPE,
-            VALID_STATE,
-            VALID_NUMBER,
-            VALID_TIMESTAMP,
-            VALID_SCORE,
-            VALID_RECONSTRUCTION_ERROR,
-            VALID_RECONSTRUCTION_THRESHOLD
-        );
+    public void testObjectCasting() {
+        // Create instance
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
         
-        // Access private fields with reflection
-        Field backgroundUsageField = Event.class.getDeclaredField("totalBackgroundUsage");
-        Field foregroundUsageField = Event.class.getDeclaredField("totalForegroundUsage");
+        // Cast to Object
+        Object obj = minutePackage;
         
-        // Make fields accessible
-        backgroundUsageField.setAccessible(true);
-        foregroundUsageField.setAccessible(true);
+        // Cast back to MinutePackage
+        MinutePackage castedMinutePackage = (MinutePackage) obj;
         
-        // Verify fields were initialized to 0 by default
-        assertEquals(0L, backgroundUsageField.getLong(newEvent), "Background usage should be initialized to 0");
-        assertEquals(0L, foregroundUsageField.getLong(newEvent), "Foreground usage should be initialized to 0");
+        // Verify fields preserved through casting
+        assertEquals(VALID_ACCESS_MINUTE, castedMinutePackage.getAccess_minute(), "access_minute should be preserved through casting");
+        assertEquals(VALID_PACKAGE_NAMES, castedMinutePackage.getPackageNames(), "packageNames should be preserved through casting");
     }
 
     /**
-     * NEGATIVE TEST CASE 13: Test updating fields that don't have setters
+     * NEGATIVE TEST CASE 13: Test invalid casting (should throw ClassCastException)
      */
     @Test
-    public void testUpdatingFieldsWithoutSetters() throws Exception {
-        // Access private fields with reflection
-        Field permissionField = Event.class.getDeclaredField("permission");
-        Field typeField = Event.class.getDeclaredField("type");
-        Field stateField = Event.class.getDeclaredField("state");
-        Field numberField = Event.class.getDeclaredField("number");
-        Field timestampField = Event.class.getDeclaredField("timestamp");
+    public void testInvalidCasting() {
+        // Create instance
+        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
         
-        // Make fields accessible
-        permissionField.setAccessible(true);
-        typeField.setAccessible(true);
-        st
+        // Cast to Object
+        Object obj = minutePackage;
+        
+        // Attempt to cast to invalid type
+        assertThrows(ClassCastException.class, () -> {
+            String invalidCast = (String) obj;
+        }, "Invalid casting should throw ClassCastException");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 14: Test with zero access_minute
+     */
+    @Test
+    public void testWithZeroAccessMinute() {
+        // Create instance with zero access minute
+        MinutePackage minutePackage = new MinutePackage(0L, VALID_PACKAGE_NAMES);
+        
+        // Verify zero was accepted
+        assertEquals(0L, minutePackage.getAccess_minute(), "Zero access minute should be accepted");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 15: Test with null reference
+     */
+    @Test
+    public void testWithNullReference() {
+        // Set reference to null
+        MinutePackage nullMinutePackage = null;
+        
+        // Verify accessing methods on null reference throws NullPointerException
+        assertThrows(NullPointerException.class, () -> {
+            long accessMinute = nullMinutePackage.getAccess_minute();
+        }, "Accessing method on null reference should throw NullPointerException");
+    }
+}
