@@ -1,48 +1,60 @@
 package com.example.app; // Replace with your actual package name
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 /**
- * Test class for MinutePackage
+ * Test class for PackageDetails
  * Contains 3 positive test cases and 15 negative test cases
  */
-public class MinutePackageTest {
+public class PackageDetailsTest {
 
     // Test constants
-    private static final long VALID_ACCESS_MINUTE = 1650000000000L;
-    private static final String VALID_PACKAGE_NAMES = "com.example.app1,com.example.app2";
+    private static final int VALID_UID = 10001;
+    private static final int VALID_APP_CATEGORY_ID = 5;
+    private static final int VALID_APP_TRUST_LEVEL = 2;
+    private static final String VALID_GRANTED_PERMISSIONS = "android.permission.CAMERA,android.permission.MICROPHONE";
+    private static final String VALID_REQUESTED_PERMISSIONS = "android.permission.CAMERA,android.permission.MICROPHONE,android.permission.LOCATION";
+    
+    private PackageDetails packageDetails;
+    private AppInfo validAppInfo;
+    
+    @BeforeEach
+    public void setUp() {
+        // Initialize with valid values before each test
+        packageDetails = new PackageDetails();
+        validAppInfo = new AppInfo(VALID_UID, VALID_APP_CATEGORY_ID, VALID_APP_TRUST_LEVEL);
+    }
 
     /* ========== POSITIVE TEST CASES ========== */
 
     /**
-     * POSITIVE TEST CASE 1: Verify constructor initializes object with correct values
+     * POSITIVE TEST CASE 1: Test setting and getting all fields with valid values
      */
     @Test
-    public void testConstructorInitializesWithCorrectValues() {
-        // Create instance with valid data
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+    public void testSettingAndGettingAllFields() {
+        // Set all fields with valid values
+        packageDetails.setAppInfo(validAppInfo);
+        packageDetails.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
+        packageDetails.setRequestedPermissions(VALID_REQUESTED_PERMISSIONS);
         
-        // Verify fields have expected values
-        assertEquals(VALID_ACCESS_MINUTE, minutePackage.getAccess_minute(), "Access minute should match constructor value");
-        assertEquals(VALID_PACKAGE_NAMES, minutePackage.getPackageNames(), "Package names should match constructor value");
+        // Verify all fields have expected values
+        assertEquals(validAppInfo, packageDetails.getAppInfo(), "AppInfo should match set value");
+        assertEquals(VALID_GRANTED_PERMISSIONS, packageDetails.getGrantedPermissions(), "Granted permissions should match set value");
+        assertEquals(VALID_REQUESTED_PERMISSIONS, packageDetails.getRequestedPermissions(), "Requested permissions should match set value");
     }
 
     /**
-     * POSITIVE TEST CASE 2: Test with multiple comma-separated package names
+     * POSITIVE TEST CASE 2: Test with default initialization (null values)
      */
     @Test
-    public void testWithMultiplePackageNames() {
-        // Create string with multiple package names
-        String multiplePackages = "com.example.app1,com.example.app2,com.example.app3,com.example.app4";
-        
-        // Create instance with multiple packages
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, multiplePackages);
-        
-        // Verify package names field contains all packages
-        assertEquals(multiplePackages, minutePackage.getPackageNames(), "Package names should contain all packages");
+    public void testDefaultInitialization() {
+        // Newly created PackageDetails should have null values
+        assertNull(packageDetails.getAppInfo(), "AppInfo should be null by default");
+        assertNull(packageDetails.getGrantedPermissions(), "Granted permissions should be null by default");
+        assertNull(packageDetails.getRequestedPermissions(), "Requested permissions should be null by default");
     }
 
     /**
@@ -50,153 +62,165 @@ public class MinutePackageTest {
      */
     @Test
     public void testMultipleInstancesWithDifferentValues() {
-        // Create first instance
-        MinutePackage minutePackage1 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        // Set values for first instance
+        packageDetails.setAppInfo(validAppInfo);
+        packageDetails.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
         
         // Create second instance with different values
-        long differentMinute = VALID_ACCESS_MINUTE + 60000; // +1 minute
-        String differentPackages = "com.example.different";
-        MinutePackage minutePackage2 = new MinutePackage(differentMinute, differentPackages);
+        PackageDetails packageDetails2 = new PackageDetails();
+        AppInfo differentAppInfo = new AppInfo(20002, 10, 3);
+        String differentPermissions = "android.permission.LOCATION";
+        packageDetails2.setAppInfo(differentAppInfo);
+        packageDetails2.setGrantedPermissions(differentPermissions);
         
         // Verify first instance has original values
-        assertEquals(VALID_ACCESS_MINUTE, minutePackage1.getAccess_minute(), "First instance access minute should remain unchanged");
-        assertEquals(VALID_PACKAGE_NAMES, minutePackage1.getPackageNames(), "First instance package names should remain unchanged");
+        assertEquals(validAppInfo, packageDetails.getAppInfo(), "First instance AppInfo should remain unchanged");
+        assertEquals(VALID_GRANTED_PERMISSIONS, packageDetails.getGrantedPermissions(), "First instance granted permissions should remain unchanged");
         
         // Verify second instance has different values
-        assertEquals(differentMinute, minutePackage2.getAccess_minute(), "Second instance should have different access minute");
-        assertEquals(differentPackages, minutePackage2.getPackageNames(), "Second instance should have different package names");
+        assertEquals(differentAppInfo, packageDetails2.getAppInfo(), "Second instance should have different AppInfo");
+        assertEquals(differentPermissions, packageDetails2.getGrantedPermissions(), "Second instance should have different granted permissions");
     }
 
     /* ========== NEGATIVE TEST CASES ========== */
 
     /**
-     * NEGATIVE TEST CASE 1: Test with negative access_minute value
+     * NEGATIVE TEST CASE 1: Test with null AppInfo
      */
     @Test
-    public void testWithNegativeAccessMinute() {
-        // Create instance with negative access minute
-        long negativeMinute = -1000L;
-        MinutePackage minutePackage = new MinutePackage(negativeMinute, VALID_PACKAGE_NAMES);
-        
-        // Verify negative value was accepted
-        assertEquals(negativeMinute, minutePackage.getAccess_minute(), "Negative access minute should be accepted");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 2: Test with empty package names string
-     */
-    @Test
-    public void testWithEmptyPackageNames() {
-        // Create instance with empty package names
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, "");
-        
-        // Verify empty string was accepted
-        assertEquals("", minutePackage.getPackageNames(), "Empty package names should be accepted");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 3: Test with null package names string
-     */
-    @Test
-    public void testWithNullPackageNames() {
-        // Create instance with null package names
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, null);
+    public void testWithNullAppInfo() {
+        // Set AppInfo to null
+        packageDetails.setAppInfo(null);
         
         // Verify null was accepted
-        assertNull(minutePackage.getPackageNames(), "Null package names should be accepted");
+        assertNull(packageDetails.getAppInfo(), "Null AppInfo should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 4: Test with extreme access_minute values
+     * NEGATIVE TEST CASE 2: Test with null granted permissions
      */
     @Test
-    public void testWithExtremeAccessMinuteValues() {
-        // Test with maximum long value
-        MinutePackage maxMinutePackage = new MinutePackage(Long.MAX_VALUE, VALID_PACKAGE_NAMES);
-        assertEquals(Long.MAX_VALUE, maxMinutePackage.getAccess_minute(), "Maximum long value should be accepted for access minute");
+    public void testWithNullGrantedPermissions() {
+        // Set granted permissions to null
+        packageDetails.setGrantedPermissions(null);
         
-        // Test with minimum long value
-        MinutePackage minMinutePackage = new MinutePackage(Long.MIN_VALUE, VALID_PACKAGE_NAMES);
-        assertEquals(Long.MIN_VALUE, minMinutePackage.getAccess_minute(), "Minimum long value should be accepted for access minute");
+        // Verify null was accepted
+        assertNull(packageDetails.getGrantedPermissions(), "Null granted permissions should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 5: Test with special characters in package names
+     * NEGATIVE TEST CASE 3: Test with null requested permissions
      */
     @Test
-    public void testWithSpecialCharactersInPackageNames() {
-        // Create package names with special characters
-        String specialPackageNames = "com.example.app!@#$%^&*(),com.example.app_+{}|:\"<>?[]\\;'./";
+    public void testWithNullRequestedPermissions() {
+        // Set requested permissions to null
+        packageDetails.setRequestedPermissions(null);
         
-        // Create instance with special characters
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, specialPackageNames);
+        // Verify null was accepted
+        assertNull(packageDetails.getRequestedPermissions(), "Null requested permissions should be accepted");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 4: Test with empty string for granted permissions
+     */
+    @Test
+    public void testWithEmptyGrantedPermissions() {
+        // Set granted permissions to empty string
+        packageDetails.setGrantedPermissions("");
+        
+        // Verify empty string was accepted
+        assertEquals("", packageDetails.getGrantedPermissions(), "Empty granted permissions should be accepted");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 5: Test with empty string for requested permissions
+     */
+    @Test
+    public void testWithEmptyRequestedPermissions() {
+        // Set requested permissions to empty string
+        packageDetails.setRequestedPermissions("");
+        
+        // Verify empty string was accepted
+        assertEquals("", packageDetails.getRequestedPermissions(), "Empty requested permissions should be accepted");
+    }
+
+    /**
+     * NEGATIVE TEST CASE 6: Test with special characters in permissions
+     */
+    @Test
+    public void testWithSpecialCharactersInPermissions() {
+        // Create permissions with special characters
+        String specialPermissions = "android.permission.CAMERA!@#$%^&*(),android.permission.MICROPHONE_+{}|:\"<>?[]\\;'./";
+        
+        // Set permissions with special characters
+        packageDetails.setGrantedPermissions(specialPermissions);
         
         // Verify special characters were accepted
-        assertEquals(specialPackageNames, minutePackage.getPackageNames(), "Special characters in package names should be accepted");
+        assertEquals(specialPermissions, packageDetails.getGrantedPermissions(), "Special characters in permissions should be accepted");
     }
 
     /**
-     * NEGATIVE TEST CASE 6: Test comparing different instances with same values
+     * NEGATIVE TEST CASE 7: Test comparing different instances with same values
      */
     @Test
     public void testCompareEqualInstances() {
         // Create two instances with the same values
-        MinutePackage minutePackage1 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
-        MinutePackage minutePackage2 = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        PackageDetails packageDetails1 = new PackageDetails();
+        PackageDetails packageDetails2 = new PackageDetails();
+        
+        // Set same values for both
+        AppInfo appInfo = new AppInfo(VALID_UID, VALID_APP_CATEGORY_ID, VALID_APP_TRUST_LEVEL);
+        packageDetails1.setAppInfo(appInfo);
+        packageDetails1.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
+        
+        packageDetails2.setAppInfo(appInfo); // Same AppInfo instance
+        packageDetails2.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
         
         // Verify objects are different even with the same values (equals() not overridden)
-        assertNotEquals(minutePackage1, minutePackage2, "Different instances should not be equal");
+        assertNotEquals(packageDetails1, packageDetails2, "Different instances should not be equal");
     }
 
     /**
-     * NEGATIVE TEST CASE 7: Test field access with reflection
+     * NEGATIVE TEST CASE 8: Test field access with reflection
      */
     @Test
     public void testFieldAccessWithReflection() throws Exception {
-        // Create instance
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        // Set values first
+        packageDetails.setAppInfo(validAppInfo);
+        packageDetails.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
+        packageDetails.setRequestedPermissions(VALID_REQUESTED_PERMISSIONS);
         
         // Access private fields with reflection
-        Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
-        Field packageNamesField = MinutePackage.class.getDeclaredField("packageNames");
+        Field appInfoField = PackageDetails.class.getDeclaredField("appInfo");
+        Field grantedPermissionsField = PackageDetails.class.getDeclaredField("grantedPermissions");
+        Field requestedPermissionsField = PackageDetails.class.getDeclaredField("requestedPermissions");
         
         // Make fields accessible
-        accessMinuteField.setAccessible(true);
-        packageNamesField.setAccessible(true);
+        appInfoField.setAccessible(true);
+        grantedPermissionsField.setAccessible(true);
+        requestedPermissionsField.setAccessible(true);
         
         // Verify field values match getter values
-        assertEquals(minutePackage.getAccess_minute(), accessMinuteField.getLong(minutePackage), "access_minute field value should match getter");
-        assertEquals(minutePackage.getPackageNames(), packageNamesField.get(minutePackage), "packageNames field value should match getter");
+        assertEquals(packageDetails.getAppInfo(), appInfoField.get(packageDetails), "appInfo field value should match getter");
+        assertEquals(packageDetails.getGrantedPermissions(), grantedPermissionsField.get(packageDetails), "grantedPermissions field value should match getter");
+        assertEquals(packageDetails.getRequestedPermissions(), requestedPermissionsField.get(packageDetails), "requestedPermissions field value should match getter");
     }
 
     /**
-     * NEGATIVE TEST CASE 8: Test field immutability (final modifier)
+     * NEGATIVE TEST CASE 9: Test field modification with reflection
      */
     @Test
-    public void testFieldImmutability() throws Exception {
-        // Access field modifiers
-        Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
-        Field packageNamesField = MinutePackage.class.getDeclaredField("packageNames");
+    public void testFieldModificationWithReflection() throws Exception {
+        // Access private fields with reflection
+        Field grantedPermissionsField = PackageDetails.class.getDeclaredField("grantedPermissions");
+        grantedPermissionsField.setAccessible(true);
         
-        // Verify fields have final modifier
-        assertTrue(Modifier.isFinal(accessMinuteField.getModifiers()), "access_minute field should be final");
-        assertTrue(Modifier.isFinal(packageNamesField.getModifiers()), "packageNames field should be final");
-    }
-
-    /**
-     * NEGATIVE TEST CASE 9: Test field modification with reflection (should fail for final fields)
-     */
-    @Test
-    public void testFieldModificationWithReflection() {
-        // Create instance
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        // Modify field directly
+        String newPermissions = "android.permission.ACCESS_FINE_LOCATION";
+        grantedPermissionsField.set(packageDetails, newPermissions);
         
-        // Attempt to modify final fields with reflection (should throw exception)
-        assertThrows(Exception.class, () -> {
-            Field accessMinuteField = MinutePackage.class.getDeclaredField("access_minute");
-            accessMinuteField.setAccessible(true);
-            accessMinuteField.setLong(minutePackage, VALID_ACCESS_MINUTE + 1);
-        }, "Modifying final field should throw exception");
+        // Verify getter reflects the change
+        assertEquals(newPermissions, packageDetails.getGrantedPermissions(), "Getter should reflect direct field modification");
     }
 
     /**
@@ -204,32 +228,29 @@ public class MinutePackageTest {
      */
     @Test
     public void testStringRepresentation() {
-        // Create instance
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
-        
         // Get string representation
-        String stringRepresentation = minutePackage.toString();
+        String stringRepresentation = packageDetails.toString();
         
         // Verify it contains class name (default toString behavior)
-        assertTrue(stringRepresentation.contains("MinutePackage@"), "String representation should contain class name");
+        assertTrue(stringRepresentation.contains("PackageDetails@"), "String representation should contain class name");
     }
 
     /**
-     * NEGATIVE TEST CASE 11: Test with very long package names string
+     * NEGATIVE TEST CASE 11: Test with very long permission strings
      */
     @Test
-    public void testWithVeryLongPackageNames() {
-        // Create very long package names string
-        StringBuilder longPackageNames = new StringBuilder();
+    public void testWithVeryLongPermissionStrings() {
+        // Create very long permission string
+        StringBuilder longPermissions = new StringBuilder();
         for (int i = 0; i < 1000; i++) {
-            longPackageNames.append("com.example.app").append(i).append(",");
+            longPermissions.append("android.permission.TEST").append(i).append(",");
         }
         
-        // Create instance with very long package names
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, longPackageNames.toString());
+        // Set very long permission string
+        packageDetails.setGrantedPermissions(longPermissions.toString());
         
         // Verify very long string was accepted
-        assertEquals(longPackageNames.toString(), minutePackage.getPackageNames(), "Very long package names should be accepted");
+        assertEquals(longPermissions.toString(), packageDetails.getGrantedPermissions(), "Very long permission string should be accepted");
     }
 
     /**
@@ -237,18 +258,19 @@ public class MinutePackageTest {
      */
     @Test
     public void testObjectCasting() {
-        // Create instance
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
+        // Set values
+        packageDetails.setAppInfo(validAppInfo);
+        packageDetails.setGrantedPermissions(VALID_GRANTED_PERMISSIONS);
         
         // Cast to Object
-        Object obj = minutePackage;
+        Object obj = packageDetails;
         
-        // Cast back to MinutePackage
-        MinutePackage castedMinutePackage = (MinutePackage) obj;
+        // Cast back to PackageDetails
+        PackageDetails castedPackageDetails = (PackageDetails) obj;
         
         // Verify fields preserved through casting
-        assertEquals(VALID_ACCESS_MINUTE, castedMinutePackage.getAccess_minute(), "access_minute should be preserved through casting");
-        assertEquals(VALID_PACKAGE_NAMES, castedMinutePackage.getPackageNames(), "packageNames should be preserved through casting");
+        assertEquals(validAppInfo, castedPackageDetails.getAppInfo(), "AppInfo should be preserved through casting");
+        assertEquals(VALID_GRANTED_PERMISSIONS, castedPackageDetails.getGrantedPermissions(), "Granted permissions should be preserved through casting");
     }
 
     /**
@@ -256,11 +278,8 @@ public class MinutePackageTest {
      */
     @Test
     public void testInvalidCasting() {
-        // Create instance
-        MinutePackage minutePackage = new MinutePackage(VALID_ACCESS_MINUTE, VALID_PACKAGE_NAMES);
-        
         // Cast to Object
-        Object obj = minutePackage;
+        Object obj = packageDetails;
         
         // Attempt to cast to invalid type
         assertThrows(ClassCastException.class, () -> {
@@ -269,15 +288,20 @@ public class MinutePackageTest {
     }
 
     /**
-     * NEGATIVE TEST CASE 14: Test with zero access_minute
+     * NEGATIVE TEST CASE 14: Test updating AppInfo fields after setting
      */
     @Test
-    public void testWithZeroAccessMinute() {
-        // Create instance with zero access minute
-        MinutePackage minutePackage = new MinutePackage(0L, VALID_PACKAGE_NAMES);
+    public void testUpdatingAppInfoAfterSetting() {
+        // Set AppInfo
+        packageDetails.setAppInfo(validAppInfo);
         
-        // Verify zero was accepted
-        assertEquals(0L, minutePackage.getAccess_minute(), "Zero access minute should be accepted");
+        // Update AppInfo fields
+        validAppInfo.setUid(20002);
+        validAppInfo.setAppCategoryId(10);
+        
+        // Verify the AppInfo reference in packageDetails reflects the changes
+        assertEquals(20002, packageDetails.getAppInfo().getUid(), "AppInfo UID change should be reflected");
+        assertEquals(10, packageDetails.getAppInfo().getAppCategoryId(), "AppInfo category ID change should be reflected");
     }
 
     /**
@@ -286,11 +310,11 @@ public class MinutePackageTest {
     @Test
     public void testWithNullReference() {
         // Set reference to null
-        MinutePackage nullMinutePackage = null;
+        PackageDetails nullPackageDetails = null;
         
         // Verify accessing methods on null reference throws NullPointerException
         assertThrows(NullPointerException.class, () -> {
-            long accessMinute = nullMinutePackage.getAccess_minute();
+            AppInfo appInfo = nullPackageDetails.getAppInfo();
         }, "Accessing method on null reference should throw NullPointerException");
     }
 }
