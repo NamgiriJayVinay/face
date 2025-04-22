@@ -1,122 +1,192 @@
-// ================ AndroidManifest.xml (add inside application tag) ================
-<receiver android:name=".SwimmingPoolWidget" 
-    android:exported="true">
-    <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-    </intent-filter>
-    <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/swimming_pool_widget_info" />
-</receiver>
-
-// ================ res/xml/swimming_pool_widget_info.xml ================
-<?xml version="1.0" encoding="utf-8"?>
-<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="250dp"
-    android:minHeight="110dp"
-    android:updatePeriodMillis="1800000"
-    android:initialLayout="@layout/swimming_pool_widget"
-    android:resizeMode="horizontal|vertical"
-    android:widgetCategory="home_screen"
-    android:previewLayout="@layout/swimming_pool_widget"/>
-
-// ================ res/layout/swimming_pool_widget.xml ================
+// Step 1: First, make sure to add a ProgressBar to your activity layout
+// activity_main.xml
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/headerLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:id="@+id/iconView"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_swimming"
-            android:tint="#FFFFFF" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Swimming pool"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:layout_marginStart="8dp"/>
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/sessionTitleText"
+    <!-- Your other views here -->
+    
+    <!-- Loading Progress -->
+    <ProgressBar
+        android:id="@+id/loadingProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/headerLayout"
-        android:layout_marginTop="12dp"
-        android:text="Beginners session"
-        android:textColor="#FFFFFF"
-        android:textSize="20sp"/>
-
-    <TextView
-        android:id="@+id/timeText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/sessionTitleText"
-        android:layout_marginTop="4dp"
-        android:text="10:00 – 10:45"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"/>
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
 
 </RelativeLayout>
 
-// ================ res/drawable/widget_background.xml ================
-<?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#4B75F2"/>
-    <corners android:radius="16dp"/>
-</shape>
-
-// ================ res/drawable/ic_swimming.xml ================
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M22,21c-1.11,0-1.73,-0.37-2.18,-0.64-0.37,-0.22-0.6,-0.36-1.15,-0.36-0.56,0-0.78,0.13-1.15,0.36-0.46,0.27-1.07,0.64-2.18,0.64s-1.73,-0.37-2.18,-0.64c-0.37,-0.22-0.6,-0.36-1.15,-0.36-0.56,0-0.78,0.13-1.15,0.36-0.46,0.27-1.08,0.64-2.19,0.64-1.11,0-1.73,-0.37-2.18,-0.64-0.37,-0.23-0.6,-0.36-1.15,-0.36s-0.78,0.13-1.15,0.36c-0.46,0.27-1.08,0.64-2.19,0.64v-2c0.56,0,0.78,-0.13,1.15,-0.36,0.46,-0.27,1.08,-0.64,2.19,-0.64s1.73,0.37,2.18,0.64c0.37,0.23,0.59,0.36,1.15,0.36,0.56,0,0.78,-0.13,1.15,-0.36,0.46,-0.27,1.08,-0.64,2.19,-0.64,1.11,0,1.73,0.37,2.18,0.64,0.37,0.22,0.6,0.36,1.15,0.36s0.78,-0.13,1.15,-0.36c0.45,-0.27,1.07,-0.64,2.18,-0.64s1.73,0.37,2.18,0.64c0.37,0.23,0.59,0.36,1.15,0.36v2z"/>
-</vector>
-
-// ================ SwimmingPoolWidget.java ================
+// Step 2: In your MainActivity.java
 package com.example.yourapp;
 
-import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProvider;
-import android.content.Context;
-import android.widget.RemoteViews;
+import android.os.Bundle;
+import android.os.AsyncTask;
+import android.view.View;
+import android.widget.ProgressBar;
+import androidx.appcompat.app.AppCompatActivity;
 
-public class SwimmingPoolWidget extends AppWidgetProvider {
+public class MainActivity extends AppCompatActivity {
+
+    private ProgressBar loadingProgressBar;
 
     @Override
-    public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        for (int appWidgetId : appWidgetIds) {
-            updateAppWidget(context, appWidgetManager, appWidgetId);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        // Initialize the ProgressBar
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+        
+        // Example button click to start a long process
+        findViewById(R.id.startButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show loading and execute long-running task
+                new LongRunningTask().execute();
+            }
+        });
+    }
+    
+    // Method to show the loading progress
+    private void showLoading() {
+        loadingProgressBar.setVisibility(View.VISIBLE);
+    }
+    
+    // Method to hide the loading progress
+    private void hideLoading() {
+        loadingProgressBar.setVisibility(View.GONE);
+    }
+    
+    // Method that takes a long time to execute (example)
+    private void longRunningMethod() {
+        // This is your long-running code
+        try {
+            // Simulate a long operation
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
-
-    static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId) {
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.swimming_pool_widget);
+    
+    // AsyncTask to handle background processing
+    private class LongRunningTask extends AsyncTask<Void, Void, Void> {
         
-        // Update widget content
-        views.setTextViewText(R.id.sessionTitleText, "Beginners session");
-        views.setTextViewText(R.id.timeText, "10:00 – 10:45");
+        @Override
+        protected void onPreExecute() {
+            // This runs on the UI thread before background processing starts
+            showLoading();
+        }
+        
+        @Override
+        protected Void doInBackground(Void... params) {
+            // This runs on a background thread
+            longRunningMethod();
+            return null;
+        }
+        
+        @Override
+        protected void onPostExecute(Void result) {
+            // This runs on the UI thread after background processing completes
+            hideLoading();
+            // Update UI or show results here
+        }
+    }
+}
 
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+// Step 3: Alternative implementation using modern approach with ExecutorService
+// Modern implementation (replacing AsyncTask which is deprecated)
+package com.example.yourapp.modern;
+
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.View;
+import android.widget.ProgressBar;
+import androidx.appcompat.app.AppCompatActivity;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class ModernMainActivity extends AppCompatActivity {
+
+    private ProgressBar loadingProgressBar;
+    private ExecutorService executorService;
+    private Handler mainHandler;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        // Initialize the ProgressBar
+        loadingProgressBar = findViewById(R.id.loadingProgressBar);
+        
+        // Create an executor service for background tasks
+        executorService = Executors.newSingleThreadExecutor();
+        
+        // Handler for main/UI thread
+        mainHandler = new Handler(Looper.getMainLooper());
+        
+        // Example button click to start a long process
+        findViewById(R.id.startButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Show loading and execute long-running task
+                executeTaskWithLoading();
+            }
+        });
+    }
+    
+    private void executeTaskWithLoading() {
+        // Show loading indicator
+        showLoading();
+        
+        // Execute task in background
+        executorService.execute(new Runnable() {
+            @Override
+            public void run() {
+                // Perform long running operation
+                longRunningMethod();
+                
+                // Update UI on main thread when done
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        hideLoading();
+                        // Update UI or show results here
+                    }
+                });
+            }
+        });
+    }
+    
+    // Show loading progress
+    private void showLoading() {
+        loadingProgressBar.setVisibility(View.VISIBLE);
+    }
+    
+    // Hide loading progress
+    private void hideLoading() {
+        loadingProgressBar.setVisibility(View.GONE);
+    }
+    
+    // Your long running method
+    private void longRunningMethod() {
+        // This is your long-running code
+        try {
+            // Simulate a long operation
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    @Override
+    protected void onDestroy() {
+        // Clean up executor when activity is destroyed
+        if (executorService != null) {
+            executorService.shutdown();
+        }
+        super.onDestroy();
     }
 }
