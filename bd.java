@@ -1,171 +1,261 @@
-
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.util.Log;
 
-import com.example.app.constants.AiPrivacyConstants;
 import com.example.app.constants.AppCategoryGroup;
 import com.example.app.constants.ModelConfigDetails;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-public class ModelThresholdDetails {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
-    private static final String TAG = AiPrivacyConstants.TAG + ModelThresholdDetails.class.getSimpleName();
+@ExtendWith(MockitoExtension.class)
+public class ModelThresholdDetailsTest {
 
-    private final Context context;
-    HashMap<String, HashMap<String, ArrayList<Double>>> modelThresholdAndScalerDetails = new HashMap<String, HashMap<String, ArrayList<Double>>>();
-    private JSONObject modelConfigDetails;
-    private JSONObject modelThresholdDetails;
-    private final HashMap<Integer, HashMap<Integer, ArrayList<Double>>> modelThresholdMap = new HashMap<Integer, HashMap<Integer, ArrayList<Double>>>();
-    private final HashMap<String, HashMap<String, ArrayList<Double>>> scalerDetailsMap = new HashMap<String, HashMap<String, ArrayList<Double>>>();
+    @Mock
+    private Context mockContext;
+    
+    @Mock
+    private AssetManager mockAssetManager;
+    
+    private ModelThresholdDetails modelThresholdDetails;
+    
+    // Sample JSON strings for testing
+    private static final String VALID_CONFIG_JSON = "{"
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_NAME_KEY + "\": \"test_model.tflite\","
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_MODEL_VERSION_KEY + "\": \"1.0.0\","
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_THRESHOLD_FILE_NAME_JSON + "\": \"threshold.json\""
+            + "}";
+            
+    private static final String VALID_THRESHOLD_JSON = "{"
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY + "\": {"
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_MEAN_KEY + "\": [0.5, 1.0, 1.5],"
+            + "\"" + ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_STANDARD_DEVIATION_KEY + "\": [0.1, 0.2, 0.3]"
+            + "},"
+            + "\"0\": {\"0\": [0.1, 0.2, 0.3], \"1\": [0.4, 0.5, 0.6]},"
+            + "\"1\": {\"0\": [0.7, 0.8, 0.9], \"1\": [1.0, 1.1, 1.2]}"
+            + "}";
+            
+    private static final String INVALID_CONFIG_JSON = "{"
+            + "\"invalid_key\": \"value\""
+            + "}";
+            
+    private static final String INVALID_THRESHOLD_JSON = "{"
+            + "\"invalid_key\": \"value\""
+            + "}";
 
-    public ModelThresholdDetails(Context context) {
-        this.context = context;
-        try {
-            String jsonString = loadJSONFromAsset(ModelConfigDetails.MODEL_CONFIG_FILENAME);
-            if (jsonString != null) {
-                modelConfigDetails = new JSONObject(jsonString);
-                String modelThresholdDetailsJsonString = loadJSONFromAsset(modelConfigDetails.getString(ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_THRESHOLD_FILE_NAME_JSON));
-                if (modelThresholdDetailsJsonString != null) {
-                    modelThresholdDetails = new JSONObject(modelThresholdDetailsJsonString);
-                    fillScalerDetails(modelThresholdDetails);
-                    fillThresholdMap(modelThresholdDetails);
-                } else {
-                    modelConfigDetails = null;
-                }
-            } else {
-                modelConfigDetails = null;
+    @BeforeEach
+    public void setUp() throws IOException {
+        // Set up mock Context and AssetManager
+        when(mockContext.getAssets()).thenReturn(mockAssetManager);
+    }
+
+    /**
+     * Test for successful initialization with valid JSON files
+     */
+    @Test
+    @DisplayName("Test successful initialization with valid JSON files")
+    public void testSuccessfulInitialization() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        
+        // Act
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Assert
+        assertNotNull(modelThresholdDetails);
+        assertEquals("test_model.tflite", modelThresholdDetails.getModelFileName());
+        assertEquals("1.0.0", modelThresholdDetails.getModelVersion());
+        
+        // Verify scaler details were loaded correctly
+        ArrayList<Double> mean = modelThresholdDetails.getMean();
+        ArrayList<Double> std = modelThresholdDetails.getStd();
+        
+        assertNotNull(mean);
+        assertNotNull(std);
+        assertEquals(3, mean.size());
+        assertEquals(3, std.size());
+        assertEquals(0.5, mean.get(0));
+        assertEquals(0.1, std.get(0));
+    }
+    
+    /**
+     * Test for getting threshold values for a specific app category and foreground state
+     */
+    @Test
+    @DisplayName("Test getting threshold values for category 0, foreground=1")
+    public void testGetThresholdForCategory() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Act
+        ArrayList<Double> threshold = modelThresholdDetails.getThreshold(0, 1);
+        
+        // Assert
+        assertNotNull(threshold);
+        assertEquals(3, threshold.size());
+        assertEquals(0.4, threshold.get(0));
+        assertEquals(0.5, threshold.get(1));
+        assertEquals(0.6, threshold.get(2));
+    }
+    
+    /**
+     * Test for getting threshold values for a different app category
+     */
+    @Test
+    @DisplayName("Test getting threshold values for category 1, background=0")
+    public void testGetThresholdForDifferentCategory() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Act
+        ArrayList<Double> threshold = modelThresholdDetails.getThreshold(1, 0);
+        
+        // Assert
+        assertNotNull(threshold);
+        assertEquals(3, threshold.size());
+        assertEquals(0.7, threshold.get(0));
+        assertEquals(0.8, threshold.get(1));
+        assertEquals(0.9, threshold.get(2));
+    }
+    
+    /**
+     * Negative test: Invalid config JSON
+     */
+    @Test
+    @DisplayName("Test initialization with invalid config JSON")
+    public void testInitializationWithInvalidConfigJson() throws IOException {
+        // Arrange
+        when(mockAssetManager.open(ModelConfigDetails.MODEL_CONFIG_FILENAME))
+                .thenReturn(new ByteArrayInputStream(INVALID_CONFIG_JSON.getBytes()));
+        
+        // Act
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Assert
+        assertNull(modelThresholdDetails.getModelFileName());
+        assertNull(modelThresholdDetails.getModelVersion());
+    }
+    
+    /**
+     * Negative test: Invalid threshold JSON
+     */
+    @Test
+    @DisplayName("Test initialization with invalid threshold JSON")
+    public void testInitializationWithInvalidThresholdJson() throws IOException, JSONException {
+        // Arrange
+        when(mockAssetManager.open(ModelConfigDetails.MODEL_CONFIG_FILENAME))
+                .thenReturn(new ByteArrayInputStream(VALID_CONFIG_JSON.getBytes()));
+        when(mockAssetManager.open("threshold.json"))
+                .thenReturn(new ByteArrayInputStream(INVALID_THRESHOLD_JSON.getBytes()));
+        
+        // Act
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Assert
+        assertNull(modelThresholdDetails.getMean());
+        assertNull(modelThresholdDetails.getStd());
+    }
+    
+    /**
+     * Negative test: File not found exception
+     */
+    @Test
+    @DisplayName("Test initialization when config file is not found")
+    public void testInitializationWithFileNotFoundException() throws IOException {
+        // Arrange
+        when(mockAssetManager.open(ModelConfigDetails.MODEL_CONFIG_FILENAME))
+                .thenThrow(new IOException("File not found"));
+        
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        });
+    }
+    
+    /**
+     * Negative test: Getting threshold for non-existent category
+     */
+    @Test
+    @DisplayName("Test getting threshold for non-existent category")
+    public void testGetThresholdForNonExistentCategory() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Act
+        ArrayList<Double> threshold = modelThresholdDetails.getThreshold(999, 1);
+        
+        // Assert
+        assertNull(threshold);
+    }
+    
+    /**
+     * Negative test: Getting threshold for non-existent foreground/background value
+     */
+    @Test
+    @DisplayName("Test getting threshold for non-existent foreground value")
+    public void testGetThresholdForNonExistentForegroundValue() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Act
+        ArrayList<Double> threshold = modelThresholdDetails.getThreshold(0, 999);
+        
+        // Assert
+        assertNull(threshold);
+    }
+    
+    /**
+     * Test with all app category groups to ensure complete coverage
+     */
+    @Test
+    @DisplayName("Test threshold values for all app category groups")
+    public void testThresholdForAllCategories() throws IOException {
+        // Arrange
+        mockValidJsonFiles();
+        modelThresholdDetails = new ModelThresholdDetails(mockContext);
+        
+        // Act & Assert
+        for (AppCategoryGroup.AppCategoryGroupName category : AppCategoryGroup.AppCategoryGroupName.values()) {
+            int categoryIndex = category.getValue();
+            ArrayList<Double> bgThreshold = modelThresholdDetails.getThreshold(categoryIndex, 0);
+            ArrayList<Double> fgThreshold = modelThresholdDetails.getThreshold(categoryIndex, 1);
+            
+            // Only categories 0 and 1 have been mocked with data
+            if (categoryIndex <= 1) {
+                assertNotNull(bgThreshold);
+                assertNotNull(fgThreshold);
+                assertEquals(3, bgThreshold.size());
+                assertEquals(3, fgThreshold.size());
             }
-        } catch (JSONException jsonException) {
-            Log.e(TAG, "Error :: " + jsonException.getMessage());
-            modelConfigDetails = null;
         }
     }
-
-    private void fillScalerDetails(JSONObject modelThresholdDetailsJSON) {
-        try {
-            JSONObject scalerDetails = modelThresholdDetailsJSON.getJSONObject(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY);
-            JSONArray meanArray = scalerDetails.getJSONArray(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_MEAN_KEY);
-            ArrayList<Double> mean = new ArrayList<Double>();
-            for (int i = 0; i < meanArray.length(); i++) {
-                mean.add(meanArray.getDouble(i));
-            }
-            JSONArray stdArray = scalerDetails.getJSONArray(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_STANDARD_DEVIATION_KEY);
-            ArrayList<Double> std = new ArrayList<Double>();
-            for (int i = 0; i < stdArray.length(); i++) {
-                std.add(stdArray.getDouble(i));
-            }
-            this.scalerDetailsMap.put(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY, new HashMap<String, ArrayList<Double>>());
-            this.scalerDetailsMap.get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY).put(
-                    ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_MEAN_KEY,
-                    mean
-            );
-            this.scalerDetailsMap.get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY).put(
-                    ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_STANDARD_DEVIATION_KEY,
-                    std
-            );
-        } catch (Exception ex) {
-            Log.e(TAG, "Error while fetching mean and standard deviation. Exception :: " + ex.getMessage());
-        }
+    
+    /**
+     * Helper method to set up mock asset manager with valid JSON files
+     */
+    private void mockValidJsonFiles() throws IOException {
+        when(mockAssetManager.open(ModelConfigDetails.MODEL_CONFIG_FILENAME))
+                .thenReturn(new ByteArrayInputStream(VALID_CONFIG_JSON.getBytes()));
+        when(mockAssetManager.open("threshold.json"))
+                .thenReturn(new ByteArrayInputStream(VALID_THRESHOLD_JSON.getBytes()));
     }
-
-    private void fillThresholdMap(JSONObject modelThresholdDETAILSJSON) {
-        for (AppCategoryGroup.AppCategoryGroupName appCatGroupName : AppCategoryGroup.AppCategoryGroupName.values()) {
-            int appCatGroupIndex = appCatGroupName.getValue();
-            int bg = 0;
-            int fg = 1;
-            try {
-                JSONObject appCategoryGroupThresholdMap = modelThresholdDETAILSJSON.getJSONObject(Integer.toString(appCatGroupIndex));
-                JSONArray appCategoryGroupForegroundThreshold = appCategoryGroupThresholdMap.getJSONArray(Integer.toString(fg));
-                JSONArray appCategoryGroupBackgroundThreshold = appCategoryGroupThresholdMap.getJSONArray(Integer.toString(bg));
-                ArrayList<Double> thresholdArrayFG = new ArrayList<Double>();
-                ArrayList<Double> thresholdArrayBG = new ArrayList<Double>();
-                for (int i = 0; i < appCategoryGroupForegroundThreshold.length(); i++) {
-                    thresholdArrayFG.add(appCategoryGroupForegroundThreshold.getDouble(i));
-                }
-                for (int i = 0; i < appCategoryGroupBackgroundThreshold.length(); i++) {
-                    thresholdArrayBG.add(appCategoryGroupBackgroundThreshold.getDouble(i));
-                }
-                this.modelThresholdMap.put(
-                        appCatGroupIndex,
-                        new HashMap<Integer, ArrayList<Double>>()
-                );
-                this.modelThresholdMap.get(appCatGroupIndex).put(
-                        fg,
-                        thresholdArrayFG
-                );
-                this.modelThresholdMap.get(appCatGroupIndex).put(
-                        bg,
-                        thresholdArrayBG
-                );
-            } catch (Exception ex) {
-                Log.e(TAG, "Error while fetching threshold json. Exception :: " + ex.getMessage());
-            }
-        }
-    }
-
-    public String getModelFileName() {
-        if (this.modelConfigDetails == null) {
-            Log.i(TAG, "Model Config Details is NULL");
-            return null;
-        }
-        try {
-            return this.modelConfigDetails.getString(ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_NAME_KEY);
-        } catch (Exception ex) {
-            Log.e(TAG, "Error while fetching model file name :: " + ex.getMessage());
-            return null;
-        }
-    }
-
-    public String getModelVersion() {
-        if (this.modelConfigDetails == null) {
-            Log.i(TAG, "Model Config details is NULL");
-            return null;
-        }
-        try {
-            return this.modelConfigDetails.getString(ModelConfigDetails.MODEL_CONFIG_JSON_MODEL_MODEL_VERSION_KEY);
-        } catch (Exception ex) {
-            Log.e(TAG, "Error while fetching model file name :: " + ex.getMessage());
-            return null;
-        }
-    }
-
-    public ArrayList<Double> getThreshold(int appCategoryGroupIndex, int fg) {
-        try {
-            ArrayList<Double> threshold = this.modelThresholdMap.get(appCategoryGroupIndex).get(fg);
-            return threshold;
-        } catch (Exception ex) {
-            return null;
-        }
-    }
-
-    public ArrayList<Double> getMean() {
-        return this.scalerDetailsMap.get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY).get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_MEAN_KEY);
-    }
-
-    public ArrayList<Double> getStd() {
-        return this.scalerDetailsMap.get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_DETAILS_KEY).get(ModelConfigDetails.MODEL_CONFIG_JSON_SCALER_STANDARD_DEVIATION_KEY);
-    }
-
-
-    private String loadJSONFromAsset(String jsonFileName) {
-        try {
-            AssetManager assetManager = context.getAssets();
-            InputStream file = assetManager.open(jsonFileName);
-            byte[] formArray = new byte[file.available()];
-            file.read(formArray);
-            return new String(formArray);
-        } catch (Exception ex) {
-            Log.e(TAG, "Error while reading json file :: " + ex.getMessage());
-            throw new RuntimeException("Reading JSON Failed for file :: " + jsonFileName);
-        }
-    }
-
 }
