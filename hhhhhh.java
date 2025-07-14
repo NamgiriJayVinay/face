@@ -1,3 +1,16 @@
+
+
+<androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recyclerView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical" />
+
+
+
+
+
+
 package com.example.recyclerviewapp;
 
 public class PkgLocationType {
